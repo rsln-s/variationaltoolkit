@@ -20,7 +20,7 @@ variational forms. Several types of commonly used ansatz.
 """
 from abc import ABC, abstractmethod
 
-from entangler_map import get_entangler_map, validate_entangler_map
+from .entangler_map import get_entangler_map, validate_entangler_map
 
 
 class VariationalForm(ABC):

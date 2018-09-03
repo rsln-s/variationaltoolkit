@@ -43,8 +43,7 @@ except Exception as e:
 # ./qiskit_aqua/utils/variational_forms/ryrz.py or smth
 #-------------------------------------------------- 
 
-sys.path.append("aqua")
-from ryrz import VarFormRYRZ
+from ibmqxbackend.aqua.ryrz import VarFormRYRZ
 
 var_form = VarFormRYRZ()
 num_qubits = args.q
