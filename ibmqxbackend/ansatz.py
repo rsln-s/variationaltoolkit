@@ -53,5 +53,8 @@ class IBMQXVarForm(object):
         if return_all:
             return res 
         else:
-            return None
+            resstrs = []
+            for k, v in res['result'].get_counts().items():
+                resstrs.extend([[int(x) for x in k]]*v)
+            return resstrs
 

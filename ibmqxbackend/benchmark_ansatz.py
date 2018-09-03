@@ -56,9 +56,13 @@ start_time = timeit.default_timer()
 
 res = var_form.run(parameters, backend_name=backend_name)
 
+print(res)
+#import pdb
+#pdb.set_trace()
+
 elapsed = timeit.default_timer() - start_time
 print("For {} qubits finished in {}".format(args.q,elapsed))
-print(res['result'])
+#print(res['result'])
 # Show the results
 #counts = result.get_counts()
 #print(counts)
