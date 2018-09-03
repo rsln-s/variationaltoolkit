@@ -29,7 +29,7 @@ class IBMQXVarForm(object):
         else:
             raise ValueError("Incorrect var_form {}".format(var_form))
 
-    def run(self, parameters, backend_name="local_qasm_simulator", return_all=False, samples=1000):
+    def run(self, parameters, backend_name="local_qasm_simulator", return_all=False, samples=1000, seed=42):
         logging.info("Using backend {}".format(backend_name))
         res = {'backend_name':backend_name, 'parameters':parameters}
         qc = self.var_form.construct_circuit(parameters)
@@ -39,7 +39,7 @@ class IBMQXVarForm(object):
 
         res['uncompiled_qasm'] = qc.qasm()
         backend = get_backend(backend_name)
-        qobj = compile(qc, backend=backend, shots=samples)
+        qobj = compile(qc, backend=backend, shots=samples, seed=seed)
         
         #res['compiled_qasm'] = qobj.experiments[0].header.compiled_circuit_qasm
         res['compiled_qasm'] = None 
