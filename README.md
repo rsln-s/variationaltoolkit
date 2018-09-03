@@ -3,7 +3,7 @@
 ## Installation
 
 ```
-git clone [...]
+git clone git@github.com:rsln-s/ibmqxbackend.git
 cd ibmqxbackend
 pip install -e .
 ```
