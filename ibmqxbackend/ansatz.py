@@ -19,7 +19,7 @@ class IBMQXVarForm(object):
             logging.info("Using token: {}".format(os.environ['QE_TOKEN']))
             register(os.environ['QE_TOKEN'])
         else:
-            logging.info("Using token: {}".format(os.environ['QE_TOKEN']))
+            logging.info("Using token: {}".format(APItoken))
             register(APItoken)
 
         if var_form == 'RYRZ':
