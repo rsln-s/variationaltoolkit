@@ -34,7 +34,7 @@ class IBMQXVarForm(object):
             self.var_form.init_args(num_qubits, depth, entanglement='linear')
             self.num_parameters = self.var_form._num_parameters
 
-    def run(self, parameters, backend_name="local_qasm_simulator"):
+    def run(self, parameters, backend_name="local_qasm_simulator", return_all=False, samples=1000):
         res = {'backend_name':backend_name, 'parameters':parameters}
         qc = self.var_form.construct_circuit(parameters)
 
@@ -43,11 +43,15 @@ class IBMQXVarForm(object):
 
         res['uncompiled_qasm'] = qc.qasm()
         backend = get_backend(backend_name)
-        qobj = compile(qc, backend=backend)
+        qobj = compile(qc, backend=backend, shots=samples)
         
         #res['compiled_qasm'] = qobj.experiments[0].header.compiled_circuit_qasm
         res['compiled_qasm'] = None 
         res['job'] = backend.run(qobj)
         res['result'] = res['job'].result()
         
-        return res 
+        if return_all:
+            return res 
+        else:
+            return None
+
