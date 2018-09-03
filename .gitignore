@@ -1,0 +1,5 @@
+Qconfig.py
+*.egg-info
+*.pyc
+.*.swp
+/dist/
