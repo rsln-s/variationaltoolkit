@@ -11,12 +11,15 @@ import time
 import numpy as np
 from difflib import ndiff
 import argparse
+import logging
 #from qiskit.backends.jobstatus import JobStatus, JOB_FINAL_STATES
 from ibmqxbackend.ansatz import IBMQXVarForm
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-q", type=int, default=10, help="number of qubits")
 args = parser.parse_args()
+
+logging.basicConfig(level=logging.INFO)
 
 var_form = IBMQXVarForm(num_qubits=args.q, depth=3)
 
@@ -26,8 +29,8 @@ parameters = np.random.uniform(-np.pi, np.pi, var_form.num_parameters)
 print("Backends: ", available_backends(compact=False))
 
 #backend_name = "ibmq_5_tenerife"
-#backend_name = "ibmq_16_rueschlikon"
-backend_name = "local_qasm_simulator_cpp"
+backend_name = "ibmq_16_rueschlikon"
+#backend_name = "local_qasm_simulator_cpp"
 #backend_name = "local_qasm_simulator_py"
 
 if False:
@@ -56,7 +59,7 @@ start_time = timeit.default_timer()
 
 res = var_form.run(parameters, backend_name=backend_name)
 
-print(res)
+#print(res)
 #import pdb
 #pdb.set_trace()
 
