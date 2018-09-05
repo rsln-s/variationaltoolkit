@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from qiskit import register, available_backends
+from qiskit import register, available_backends, registered_providers
 from qiskit import get_backend, compile
 from ibmqxbackend.aqua.ryrz import VarFormRYRZ
 import os
@@ -14,13 +14,16 @@ class IBMQXVarForm(object):
     """
 
     def __init__(self, num_qubits=10, depth=3, var_form='RYRZ', APItoken=None):
-        if APItoken is None:
-            # try grabbing token from environment
-            logging.info("Using token: {}".format(os.environ['QE_TOKEN']))
-            register(os.environ['QE_TOKEN'])
-        else:
-            logging.info("Using token: {}".format(APItoken))
-            register(APItoken)
+        providers = registered_providers()
+        if len(providers) <= 1:
+            # if didn't register yet
+            if APItoken is None:
+                # try grabbing token from environment
+                logging.info("Using token: {}".format(os.environ['QE_TOKEN']))
+                register(os.environ['QE_TOKEN'])
+            else:
+                logging.info("Using token: {}".format(APItoken))
+                register(APItoken)
 
         if var_form == 'RYRZ':
             self.var_form = VarFormRYRZ()
