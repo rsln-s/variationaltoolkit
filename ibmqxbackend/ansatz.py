@@ -46,8 +46,7 @@ class IBMQXVarForm(object):
         backend = get_backend(backend_name)
         qobj = compile(qc, backend=backend, shots=samples, seed=seed)
         
-        #res['compiled_qasm'] = qobj.experiments[0].header.compiled_circuit_qasm
-        res['compiled_qasm'] = None 
+        res['compiled_qasm'] = qobj['circuits'][0]['compiled_circuit_qasm'] 
         res['job'] = backend.run(qobj)
         res['result'] = res['job'].result()
         

@@ -12,6 +12,8 @@ import numpy as np
 from difflib import ndiff
 import argparse
 import logging
+import sys
+import pickle
 #from qiskit.backends.jobstatus import JobStatus, JOB_FINAL_STATES
 from ibmqxbackend.ansatz import IBMQXVarForm
 
@@ -21,7 +23,7 @@ args = parser.parse_args()
 
 logging.basicConfig(level=logging.INFO)
 
-var_form = IBMQXVarForm(num_qubits=args.q, depth=3)
+var_form = IBMQXVarForm(num_qubits=args.q, depth=0)
 
 parameters = np.random.uniform(-np.pi, np.pi, var_form.num_parameters)
 
@@ -33,18 +35,25 @@ backend_name = "ibmq_16_rueschlikon"
 #backend_name = "local_qasm_simulator_cpp"
 #backend_name = "local_qasm_simulator_py"
 
+print("running on {}...".format(backend_name))
+
+res = var_form.run(parameters, backend_name=backend_name, return_all=True)
+
+print(res['uncompiled_qasm'])
+print('------------------------------')
+print(res['compiled_qasm'])
+
+print([type(x) for x in res.values()])
+
 if False:
     # set to True to see what changed in compilation
     print("Changed in compilation:")
-    diff = ndiff(uncompiled_qasm.splitlines(keepends=True), compiled_qasm.splitlines(keepends=True))
+    diff = ndiff(res['uncompiled_qasm'].splitlines(keepends=True), res['compiled_qasm'].splitlines(keepends=True))
     print(''.join(diff), end="")
-    sys.exit(0)
 
-print("running on {}...".format(backend_name))
+#outname = 'stuff/rueschlikon.p'
+#pickle.dump(res, open(outname, "wb"))
 
-import timeit
-
-start_time = timeit.default_timer()
 #lapse = 0
 #interval = 1
 #while True:
@@ -57,14 +66,11 @@ start_time = timeit.default_timer()
 #
 #print(job.status)
 
-res = var_form.run(parameters, backend_name=backend_name)
 
 #print(res)
 #import pdb
 #pdb.set_trace()
 
-elapsed = timeit.default_timer() - start_time
-print("For {} qubits finished in {}".format(args.q,elapsed))
 #print(res['result'])
 # Show the results
 #counts = result.get_counts()
