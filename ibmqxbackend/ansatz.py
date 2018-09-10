@@ -31,6 +31,7 @@ class IBMQXVarForm(object):
             self.num_parameters = self.var_form._num_parameters
         else:
             raise ValueError("Incorrect var_form {}".format(var_form))
+        logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
 
     def run(self, parameters, backend_name="local_qasm_simulator", return_all=False, samples=1000, seed=42):
         if backend_name is None:
