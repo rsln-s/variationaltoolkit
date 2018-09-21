@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from qiskit import register, available_backends, registered_providers
-from qiskit import get_backend, compile
+from qiskit import get_backend, compile, QISKitError
 from ibmqxbackend.aqua.ryrz import VarFormRYRZ
 import os
 import logging
@@ -33,29 +33,39 @@ class IBMQXVarForm(object):
             raise ValueError("Incorrect var_form {}".format(var_form))
         logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
 
-    def run(self, parameters, backend_name="local_qasm_simulator", return_all=False, samples=1000, seed=42):
+    def run(self, parameters, backend_name="local_qasm_simulator", return_all=False, samples=1000, seed=42, nattempts=25):
         if backend_name is None:
             backend_name = "local_qasm_simulator"
-        logging.info("Using backend {}".format(backend_name))
-        res = {'backend_name':backend_name, 'parameters':parameters}
-        qc = self.var_form.construct_circuit(parameters)
+        for attempt in range(0,nattempts):
+            try:
+                logging.info("Using backend {}".format(backend_name))
+                res = {'backend_name':backend_name, 'parameters':parameters}
+                qc = self.var_form.construct_circuit(parameters)
 
-        # kinda hacky
-        qc.measure(qc.get_qregs()['q'], qc.get_cregs()['c'])
+                # kinda hacky
+                qc.measure(qc.get_qregs()['q'], qc.get_cregs()['c'])
 
-        res['uncompiled_qasm'] = qc.qasm()
-        backend = get_backend(backend_name)
-        qobj = compile(qc, backend=backend, shots=samples, seed=seed)
-        
-        res['compiled_qasm'] = qobj['circuits'][0]['compiled_circuit_qasm'] 
-        res['job'] = backend.run(qobj)
-        res['result'] = res['job'].result()
-        
-        if return_all:
-            return res 
-        else:
-            resstrs = []
-            for k, v in res['result'].get_counts().items():
-                resstrs.extend([[int(x) for x in k]]*v)
-            return resstrs
-
+                res['uncompiled_qasm'] = qc.qasm()
+                backend = get_backend(backend_name)
+                qobj = compile(qc, backend=backend, shots=samples, seed=seed)
+                
+                res['compiled_qasm'] = qobj['circuits'][0]['compiled_circuit_qasm'] 
+                res['job'] = backend.run(qobj)
+                res['result'] = res['job'].result()
+                
+                if return_all:
+                    return res 
+                else:
+                    resstrs = []
+                    for k, v in res['result'].get_counts().items():
+                        resstrs.extend([[int(x) for x in k]]*v)
+                    return resstrs
+            except QISKitError as e:
+                if attempt < nattempts - 1:
+                    print("While using IBM Q backend, encountered {}. Trying again...".format(e))
+                    # retry
+                    continue
+                else:
+                    # propagate the error
+                    raise e
+            break
