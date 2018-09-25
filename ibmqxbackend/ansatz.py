@@ -3,6 +3,7 @@
 from qiskit import register, available_backends, registered_providers
 from qiskit import get_backend, compile, QISKitError
 from ibmqxbackend.aqua.ryrz import VarFormRYRZ
+from time import sleep
 import os
 import logging
 
@@ -60,7 +61,8 @@ class IBMQXVarForm(object):
                     for k, v in res['result'].get_counts().items():
                         resstrs.extend([[int(x) for x in k]]*v)
                     return resstrs
-            except QISKitError as e:
+            except (QISKitError, KeyError) as e:
+                sleep(attempt * 10)
                 if attempt < nattempts - 1:
                     print("While using IBM Q backend, encountered {}. Trying again...".format(e))
                     # retry
