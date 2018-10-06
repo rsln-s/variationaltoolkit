@@ -34,8 +34,8 @@ class IBMQXVarForm(object):
         logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
 
     def run(self, parameters, backend_name="local_qasm_simulator", return_all=False, samples=1000, seed=42, nattempts=25):
-        if backend_name is None or backend_name == "local_qasm_simulator":
-            backend = Aer.get_backend("local_qasm_simulator")
+        if backend_name is None or "simulator" in backend_name:
+            backend = Aer.get_backend("qasm_simulator")
         else:
             backend = IBMQ.get_backend(backend_name)
         for attempt in range(0,nattempts):

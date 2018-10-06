@@ -31,7 +31,7 @@ parameters = np.random.uniform(-np.pi, np.pi, var_form.num_parameters)
 print("Backends: ", IBMQ.backends(), Aer.backends())
 #backend_name = "ibmq_5_tenerife"
 #backend_name = "ibmq_16_melbourne"
-backend_name = "local_qasm_simulator"
+backend_name = "qasm_simulator"
 #backend_name = "local_qasm_simulator_py"
 
 print("running on {}...".format(backend_name))
