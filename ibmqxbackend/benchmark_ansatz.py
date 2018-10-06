@@ -6,7 +6,7 @@
 #
 
 # Import the Qiskit SDK
-from qiskit import available_backends
+from qiskit import IBMQ, Aer 
 import time
 import numpy as np
 from difflib import ndiff
@@ -18,7 +18,7 @@ import pickle
 from ibmqxbackend.ansatz import IBMQXVarForm
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-q", type=int, default=10, help="number of qubits")
+parser.add_argument("-q", type=int, default=5, help="number of qubits")
 args = parser.parse_args()
 
 logging.basicConfig(level=logging.INFO)
@@ -28,22 +28,25 @@ var_form = IBMQXVarForm(num_qubits=args.q, depth=0)
 parameters = np.random.uniform(-np.pi, np.pi, var_form.num_parameters)
 
 # See a list of available local simulators
-print("Backends: ", available_backends(compact=False))
-
+print("Backends: ", IBMQ.backends(), Aer.backends())
 #backend_name = "ibmq_5_tenerife"
-backend_name = "ibmq_16_rueschlikon"
-#backend_name = "local_qasm_simulator_cpp"
+#backend_name = "ibmq_16_melbourne"
+backend_name = "local_qasm_simulator"
 #backend_name = "local_qasm_simulator_py"
 
 print("running on {}...".format(backend_name))
 
-res = var_form.run(parameters, backend_name=backend_name, return_all=True)
+#res = var_form.run(parameters, backend_name=backend_name, return_all=True)
+import timeit
+start_time = timeit.default_timer()
+res = var_form.run(parameters, backend_name=backend_name)
+print("Finished in: ", timeit.default_timer() - start_time)
 
-print(res['uncompiled_qasm'])
-print('------------------------------')
-print(res['compiled_qasm'])
+#print(res['uncompiled_qasm'])
+#print('------------------------------')
+#print(res['compiled_qasm'])
 
-print([type(x) for x in res.values()])
+#print(res)
 
 if False:
     # set to True to see what changed in compilation

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from qiskit import register, available_backends, registered_providers
+from qiskit import register, IBMQ, Aer
 from qiskit import get_backend, compile, QISKitError
 from ibmqxbackend.aqua.ryrz import VarFormRYRZ
 from time import sleep
@@ -15,13 +15,12 @@ class IBMQXVarForm(object):
     """
 
     def __init__(self, num_qubits=10, depth=3, var_form='RYRZ', APItoken=None):
-        providers = registered_providers()
-        if len(providers) <= 1:
+        if len(IBMQ.stored_accounts()) <= 1:
             # if didn't register yet
             if APItoken is None:
                 # try grabbing token from environment
                 logging.info("Using token: {}".format(os.environ['QE_TOKEN']))
-                register(os.environ['QE_TOKEN'])
+                IBMQ.enable_account(os.environ['QE_TOKEN'], os.environ['QE_URL'])
             else:
                 logging.info("Using token: {}".format(APItoken))
                 register(APItoken)
@@ -35,8 +34,10 @@ class IBMQXVarForm(object):
         logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
 
     def run(self, parameters, backend_name="local_qasm_simulator", return_all=False, samples=1000, seed=42, nattempts=25):
-        if backend_name is None:
-            backend_name = "local_qasm_simulator"
+        if backend_name is None or backend_name == "local_qasm_simulator":
+            backend = Aer.get_backend("local_qasm_simulator")
+        else:
+            backend = IBMQ.get_backend(backend_name)
         for attempt in range(0,nattempts):
             try:
                 logging.info("Using backend {}".format(backend_name))
@@ -47,10 +48,8 @@ class IBMQXVarForm(object):
                 qc.measure(qc.get_qregs()['q'], qc.get_cregs()['c'])
 
                 res['uncompiled_qasm'] = qc.qasm()
-                backend = get_backend(backend_name)
                 qobj = compile(qc, backend=backend, shots=samples, seed=seed)
-                
-                res['compiled_qasm'] = qobj['circuits'][0]['compiled_circuit_qasm'] 
+
                 res['job'] = backend.run(qobj)
                 res['result'] = res['job'].result()
                 
@@ -64,7 +63,7 @@ class IBMQXVarForm(object):
             except (QISKitError, KeyError) as e:
                 sleep(attempt * 10)
                 if attempt < nattempts - 1:
-                    print("While using IBM Q backend, encountered {}. Trying again...".format(e))
+                    logging.info("While using IBM Q backend, encountered {}. Trying again...".format(e))
                     # retry
                     continue
                 else:
