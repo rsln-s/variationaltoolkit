@@ -23,7 +23,7 @@ args = parser.parse_args()
 
 logging.basicConfig(level=logging.INFO)
 
-var_form = IBMQXVarForm(num_qubits=args.q, depth=0)
+var_form = IBMQXVarForm(num_qubits=args.q, depth=2)
 
 parameters = np.random.uniform(-np.pi, np.pi, var_form.num_parameters)
 
@@ -36,13 +36,13 @@ backend_name = "qasm_simulator"
 
 print("running on {}...".format(backend_name))
 
-#res = var_form.run(parameters, backend_name=backend_name, return_all=True)
-import timeit
-start_time = timeit.default_timer()
-res = var_form.run(parameters, backend_name=backend_name)
-print("Finished in: ", timeit.default_timer() - start_time)
+res = var_form.run(parameters, backend_name=backend_name, return_all=True)
+#import timeit
+#start_time = timeit.default_timer()
+#res = var_form.run(parameters, backend_name=backend_name)
+#print("Finished in: ", timeit.default_timer() - start_time)
 
-#print(res['uncompiled_qasm'])
+print(res['uncompiled_qasm'])
 #print('------------------------------')
 #print(res['compiled_qasm'])
 
