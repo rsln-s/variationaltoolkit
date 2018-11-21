@@ -32,6 +32,7 @@ class IBMQXVarForm(object):
         if var_form == 'RYRZ':
             self.var_form = VarFormRYRZ()
             self.var_form.init_args(num_qubits, depth, entanglement='linear')
+            self.shift = 0
         elif var_form == 'QAOA':
             if problem_description['name'] == 'modularity':
                 B = problem_description['B']
@@ -76,7 +77,7 @@ class IBMQXVarForm(object):
                 else:
                     resstrs = []
                     for k, v in res['result'].get_counts().items():
-                        resstrs.extend([[int(x) for x in k]]*v)
+                        resstrs.extend([tuple(int(x) for x in k)]*v)
                     return resstrs
             except (QISKitError, KeyError) as e:
                 sleep(attempt * 10)
