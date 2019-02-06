@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from qiskit import register, IBMQ, Aer
-from qiskit import get_backend, compile, QISKitError
+from qiskit import IBMQ, Aer
+from qiskit import compile, QISKitError
 from ibmqxbackend.aqua.ryrz import VarFormRYRZ
 from time import sleep
 import os
@@ -15,15 +15,14 @@ class IBMQXVarForm(object):
     """
 
     def __init__(self, num_qubits=10, depth=3, var_form='RYRZ', APItoken=None):
-        if len(IBMQ.stored_accounts()) <= 1:
-            # if didn't register yet
-            if APItoken is None:
+        if len(IBMQ.active_accounts()) <= 1:
+            # try just loading
+            IBMQ.load_accounts()
+            # if that didn't work, resort to grabbing tokens
+            if len(IBMQ.active_accounts()) <= 1: 
                 # try grabbing token from environment
-                logging.info("Using token: {}".format(os.environ['QE_TOKEN']))
+                logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
                 IBMQ.enable_account(os.environ['QE_TOKEN'], os.environ['QE_URL'])
-            else:
-                logging.info("Using token: {}".format(APItoken))
-                register(APItoken)
 
         if var_form == 'RYRZ':
             self.var_form = VarFormRYRZ()
@@ -31,7 +30,7 @@ class IBMQXVarForm(object):
             self.num_parameters = self.var_form._num_parameters
         else:
             raise ValueError("Incorrect var_form {}".format(var_form))
-        logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
+        logging.debug("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
 
     def run(self, parameters, backend_name="local_qasm_simulator", return_all=False, samples=1000, seed=42, nattempts=25):
         if backend_name is None or "simulator" in backend_name:
@@ -45,7 +44,7 @@ class IBMQXVarForm(object):
                 qc = self.var_form.construct_circuit(parameters)
 
                 # kinda hacky
-                qc.measure(qc.get_qregs()['q'], qc.get_cregs()['c'])
+                qc.measure(qc.qregs[0], qc.cregs[0])
 
                 res['uncompiled_qasm'] = qc.qasm()
                 qobj = compile(qc, backend=backend, shots=samples, seed=seed)
@@ -63,7 +62,7 @@ class IBMQXVarForm(object):
             except (QISKitError, KeyError) as e:
                 sleep(attempt * 10)
                 if attempt < nattempts - 1:
-                    logging.info("While using IBM Q backend, encountered {}. Trying again...".format(e))
+                    logging.warning("While using IBM Q backend, encountered {}. Trying again...".format(e))
                     # retry
                     continue
                 else:
