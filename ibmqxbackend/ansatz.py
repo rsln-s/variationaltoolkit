@@ -14,7 +14,7 @@ class IBMQXVarForm(object):
     By default uses Qconfig.py file in the root folder of ibmqxbackend module
     """
 
-    def __init__(self, num_qubits=10, depth=3, var_form='RYRZ', APItoken=None):
+    def __init__(self, problem_description, depth=3, var_form='RYRZ', APItoken=None):
         if len(IBMQ.active_accounts()) <= 1:
             # try just loading
             IBMQ.load_accounts()
@@ -23,7 +23,7 @@ class IBMQXVarForm(object):
                 # try grabbing token from environment
                 logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
                 IBMQ.enable_account(os.environ['QE_TOKEN'], os.environ['QE_URL'])
-
+        num_qubits = problem_description['num_qubits']
         if var_form == 'RYRZ':
             self.var_form = VarFormRYRZ()
             self.var_form.init_args(num_qubits, depth, entanglement='linear')
@@ -32,7 +32,7 @@ class IBMQXVarForm(object):
             raise ValueError("Incorrect var_form {}".format(var_form))
         logging.debug("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
 
-    def run(self, parameters, backend_name="local_qasm_simulator", return_all=False, samples=1000, seed=42, nattempts=25):
+    def run(self, parameters, backend_name="qasm_simulator", return_all=False, samples=1000, seed=42, nattempts=25):
         if backend_name is None or "simulator" in backend_name:
             backend = Aer.get_backend("qasm_simulator")
         else:
