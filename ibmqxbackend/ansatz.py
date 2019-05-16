@@ -3,6 +3,7 @@
 from qiskit import IBMQ, Aer, execute
 from qiskit import compile, QISKitError
 from ibmqxbackend.aqua.ryrz import VarFormRYRZ
+from ibmqxbackend.aqua.entangler_map import get_entangler_map_for_device
 from qiskit.providers.aer import noise
 from time import sleep
 import os
@@ -27,7 +28,7 @@ class IBMQXVarForm(object):
         num_qubits = problem_description['num_qubits']
         if var_form == 'RYRZ':
             self.var_form = VarFormRYRZ()
-            self.var_form.init_args(num_qubits, depth, entanglement='linear')
+            self.var_form.init_args(num_qubits, depth, entangler_map=get_entangler_map_for_device(target_backend_name))
             self.num_parameters = self.var_form._num_parameters
             self.target_backend_name = target_backend_name
         else:
