@@ -38,11 +38,11 @@ def get_entangler_map(map_type, num_qubits):
             ret = {i: [i + 1] for i in range(num_qubits-1)}
     return ret
 
-def get_entangler_map_for_device(device_name):
-    if device_name == 'ibmq_poughkeepsie':
+def get_entangler_map_for_device(device_name, num_qubits):
+    if device_name == 'ibmq_poughkeepsie' and num_qubits == 20:
         return { 0:[1],  1:[2],  2:[3],  3:[4],  4:[9],  9:[8],  8:[7],  7:[6],  6:[5],  5:[10],  10:[11],  11:[12],  12:[13],  13:[14],  14:[19],  19:[18],  18:[17],  17:[16],  16:[15]}
     else:
-        raise ValueError("Need to hardcode the entangler for device '{}'".format(device_name))
+        return None
 
 def validate_entangler_map(entangler_map, num_qubits, allow_double_entanglement=False):
     """Validates a user supplied entangler map and converts entries to ints

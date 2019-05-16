@@ -28,7 +28,7 @@ class IBMQXVarForm(object):
         num_qubits = problem_description['num_qubits']
         if var_form == 'RYRZ':
             self.var_form = VarFormRYRZ()
-            self.var_form.init_args(num_qubits, depth, entangler_map=get_entangler_map_for_device(target_backend_name))
+            self.var_form.init_args(num_qubits, depth, entangler_map=get_entangler_map_for_device(target_backend_name, num_qubits))
             self.num_parameters = self.var_form._num_parameters
             self.target_backend_name = target_backend_name
         else:
