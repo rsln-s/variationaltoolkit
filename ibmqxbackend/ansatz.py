@@ -63,12 +63,17 @@ class IBMQXVarForm(object):
                 # kinda hacky
                 qc.measure(qc.qregs[0], qc.cregs[0])
 
-                qobj = execute(qc, backend=backend, 
-                        shots=samples, 
-                        seed=seed, 
-                        coupling_map=coupling_map, 
-                        noise_model=noise_model,
-                        basis_gates=basis_gates)
+                if backend_name is None or "simulator" in backend_name:
+                    qobj = execute(qc, backend=backend, 
+                            shots=samples, 
+                            seed=seed, 
+                            coupling_map=coupling_map, 
+                            noise_model=None,
+                            basis_gates=basis_gates)
+                else:
+                    # quantum backend
+                    qobj = execute(qc, backend=backend, 
+                            shots=samples)
 
                 res['result'] = qobj.result()
                 
