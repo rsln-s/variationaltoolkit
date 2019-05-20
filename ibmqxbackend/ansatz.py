@@ -26,32 +26,32 @@ class IBMQXVarForm(object):
                 logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
                 IBMQ.enable_account(os.environ['QE_TOKEN'], os.environ['QE_URL'])
         num_qubits = problem_description['num_qubits']
+        self.coupling_map = None
+        self.noise_model = None
+        self.basis_gates = None
         if var_form == 'RYRZ':
             self.var_form = VarFormRYRZ()
             self.var_form.init_args(num_qubits, depth, entangler_map=get_entangler_map_for_device(target_backend_name, num_qubits))
             self.num_parameters = self.var_form._num_parameters
             self.target_backend_name = target_backend_name
-        else:
-            raise ValueError("Incorrect var_form {}".format(var_form))
-        logging.debug("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
-
-    def run(self, parameters, backend_name="qasm_simulator", return_all=False, samples=1000, seed=42, nattempts=25):
-        coupling_map = None
-        noise_model = None
-        basis_gates = None
-        if backend_name is None or "simulator" in backend_name:
-            backend = Aer.get_backend("qasm_simulator")
 
             if self.target_backend_name is not None:
                 # load noise models
                 target_backend = IBMQ.get_backend(self.target_backend_name)
                 properties = target_backend.properties()
-                coupling_map = target_backend.configuration().coupling_map
+                self.coupling_map = target_backend.configuration().coupling_map
 
                 # Generate an Aer noise model for target_backend
-                noise_model = noise.device.basic_device_noise_model(properties)
-                basis_gates = noise_model.basis_gates
+                self.noise_model = noise.device.basic_device_noise_model(properties)
+                self.basis_gates = self.noise_model.basis_gates
 
+        else:
+            raise ValueError("Incorrect var_form {}".format(var_form))
+        logging.debug("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
+
+    def run(self, parameters, backend_name="qasm_simulator", return_all=False, samples=1000, seed=42, nattempts=25):
+        if backend_name is None or "simulator" in backend_name:
+            backend = Aer.get_backend("qasm_simulator")
         else:
             backend = IBMQ.get_backend(backend_name)
         for attempt in range(0,nattempts):
@@ -67,9 +67,9 @@ class IBMQXVarForm(object):
                     qobj = execute(qc, backend=backend, 
                             shots=samples, 
                             seed=seed, 
-                            coupling_map=coupling_map, 
+                            coupling_map=self.coupling_map, 
                             noise_model=None,
-                            basis_gates=basis_gates)
+                            basis_gates=self.basis_gates)
                 else:
                     # quantum backend
                     qobj = execute(qc, backend=backend, 
