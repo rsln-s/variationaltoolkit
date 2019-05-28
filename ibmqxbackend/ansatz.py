@@ -7,7 +7,14 @@ from ibmqxbackend.aqua.entangler_map import get_entangler_map_for_device
 from qiskit.providers.aer import noise
 from time import sleep
 import os
+import time
+import datetime
+import pytz
 import logging
+from pathlib import Path
+
+# superhardcoded path to logfile
+logfile_path = '/zfs/safrolab/users/rshaydu/quantum/data/ibmqxbackend_jobtimes_log.csv'
 
 class IBMQXVarForm(object):
     """
@@ -72,9 +79,25 @@ class IBMQXVarForm(object):
                             basis_gates=self.basis_gates)
                 else:
                     # quantum backend
+                    start = time.time()
+                    start_time_utc = pytz.utc.localize(datetime.datetime.utcnow())
                     qobj = execute(qc, backend=backend, 
                             shots=samples)
-
+                    end = time.time()
+                    end_time_utc = pytz.utc.localize(datetime.datetime.utcnow())
+                    timezone = "America/Chicago"
+                    start_time_cst = start_time_utc.astimezone(pytz.timezone(timezone))
+                    end_time_cst = end_time_utc.astimezone(pytz.timezone(timezone))
+                    runtime_seconds = end - start
+                    if Path(logfile_path).exists():
+                        with open(logfile_path, 'a') as f:
+                            line = ','.join([str(x) for x in [qobj.job_id(), 
+                                                              start_time_cst.strftime("%Y-%m-%d %H:%M:%S"),
+                                                              end_time_cst.strftime("%Y-%m-%d %H:%M:%S"),
+                                                              timezone,
+                                                              runtime_seconds,
+                                                              backend_name]])
+                            f.write(line+'\n')
                 res['result'] = qobj.result()
                 
                 if return_all:
