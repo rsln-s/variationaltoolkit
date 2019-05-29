@@ -17,7 +17,8 @@ class IBMQXVarForm(object):
     By default uses Qconfig.py file in the root folder of ibmqxbackend module
     """
 
-    def __init__(self, problem_description, depth=3, var_form='RYRZ', APItoken=None):
+    def __init__(self, problem_description, depth=3, var_form='RYRZ', APItoken=None, **kwargs):
+        # kwargs are ignored
         num_qubits = problem_description['n_nodes']
         if len(IBMQ.stored_accounts()) <= 1:
             # if didn't register yet
