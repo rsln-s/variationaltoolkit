@@ -35,7 +35,10 @@ class IBMQXVarForm(object):
                 # try grabbing token from environment
                 logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
                 IBMQ.enable_account(os.environ['QE_TOKEN'], os.environ['QE_URL'])
-        num_qubits = problem_description['num_qubits']
+        try:
+            num_qubits = problem_description['num_qubits']
+        except KeyError:
+            num_qubits = problem_description['n_nodes']
         self.coupling_map = None
         self.noise_model = None
         self.basis_gates = None

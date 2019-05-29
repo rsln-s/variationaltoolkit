@@ -4,7 +4,7 @@ Generates cost Hamiltonian for the modularity maximization problem
 
 """
 import numpy as np
-from qiskit.tools.qi.pauli import Pauli
+from qiskit.quantum_info import Pauli
 from qiskit_aqua import Operator
 
 def get_modularity_qubitops(B):
