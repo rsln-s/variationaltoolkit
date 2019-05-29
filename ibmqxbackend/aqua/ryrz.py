@@ -61,7 +61,7 @@ class VarFormRYRZ(VariationalForm):
         self._initial_state = None
 
     def init_args(self, num_qubits, depth, entangler_map=None,
-                  entanglement='full', initial_state=None):
+                  entanglement='linear', initial_state=None):
         """
         Args:
             num_qubits (int) : number of qubits
