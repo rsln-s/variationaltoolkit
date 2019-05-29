@@ -15,6 +15,7 @@ import logging
 import sys
 import pickle
 #from qiskit.backends.jobstatus import JobStatus, JOB_FINAL_STATES
+import networkx as nx
 from ibmqxbackend.ansatz import IBMQXVarForm
 
 parser = argparse.ArgumentParser()
@@ -23,7 +24,10 @@ args = parser.parse_args()
 
 logging.basicConfig(level=logging.INFO)
 
-var_form = IBMQXVarForm(num_qubits=args.q, depth=2)
+G = nx.connected_caveman_graph(2, 3)
+B = nx.modularity_matrix(G)
+
+var_form = IBMQXVarForm(num_qubits=args.q, depth=1, var_form='QAOA', B=B)
 
 parameters = np.random.uniform(-np.pi, np.pi, var_form.num_parameters)
 

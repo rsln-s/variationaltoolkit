@@ -5,6 +5,9 @@ from qiskit import compile, QISKitError
 from ibmqxbackend.aqua.ryrz import VarFormRYRZ
 from ibmqxbackend.aqua.entangler_map import get_entangler_map_for_device
 from qiskit.providers.aer import noise
+from ibmqxbackend.aqua.qaoa import QAOAVarForm
+from ibmqxbackend.aqua.modularity_ising import get_modularity_qubitops
+from ibmqxbackend.aqua.maxcut_ising import get_maxcut_qubitops
 from time import sleep
 import os
 import time
@@ -51,10 +54,26 @@ class IBMQXVarForm(object):
                 # Generate an Aer noise model for target_backend
                 self.noise_model = noise.device.basic_device_noise_model(properties)
                 self.basis_gates = self.noise_model.basis_gates
-
+            self.var_form.init_args(num_qubits, depth, entanglement='linear')
+            self.shift = 0
+        elif var_form == 'QAOA':
+            if problem_description['name'] == 'modularity':
+                B = problem_description['B']
+                if B is None:
+                    raise ValueError("If using var_form == QAOA, have to specify B")
+                qubitOp = get_modularity_qubitops(B)
+                self.shift = 0
+            elif problem_description['name'] == 'maxcut':
+                A = problem_description['A']
+                qubitOp, shift = get_maxcut_qubitops(A)
+                self.shift = shift
+            else:
+                raise ValueError("Unsupported problem: {}".format(problem_description['name']))
+            self.var_form = QAOAVarForm(qubitOp, depth)
         else:
             raise ValueError("Incorrect var_form {}".format(var_form))
-        logging.debug("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
+        self.num_parameters = self.var_form._num_parameters
+        logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
 
     def run(self, parameters, backend_name="qasm_simulator", return_all=False, samples=1000, seed=42, nattempts=25):
         if backend_name is None or "simulator" in backend_name:
@@ -105,7 +124,7 @@ class IBMQXVarForm(object):
                 else:
                     resstrs = []
                     for k, v in res['result'].get_counts().items():
-                        resstrs.extend([[int(x) for x in k]]*v)
+                        resstrs.extend([tuple(int(x) for x in k)]*v)
                     return resstrs
             except (KeyboardInterrupt, SystemExit):
                 raise
