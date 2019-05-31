@@ -18,8 +18,8 @@
 import numpy as np
 from functools import reduce
 from qiskit import QuantumRegister, QuantumCircuit, ClassicalRegister
-from qiskit.tools.qi.pauli import Pauli
-from qiskit_aqua.operator import Operator
+from qiskit.quantum_info import Pauli
+from qiskit_aqua import Operator
 
 
 class QAOAVarForm:
