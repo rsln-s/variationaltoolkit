@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from qiskit import IBMQ, Aer, execute
-from qiskit import compile, QISKitError
+from qiskit import compile
 from ibmqxbackend.aqua.ryrz import VarFormRYRZ
 from ibmqxbackend.aqua.entangler_map import get_entangler_map_for_device
 from qiskit.providers.aer import noise

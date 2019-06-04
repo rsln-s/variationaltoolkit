@@ -2,7 +2,7 @@
 
 Generates cost Hamiltonian for the maxcut problem
 
-from qiskit_aqua/translators/ising/maxcut.py
+from qiskit.aqua/translators/ising/maxcut.py
 
 # Copyright 2018 IBM.
 #
@@ -24,7 +24,7 @@ from qiskit_aqua/translators/ising/maxcut.py
 
 import numpy as np
 from qiskit.quantum_info import Pauli
-from qiskit_aqua import Operator
+from qiskit.aqua import Operator
 
 def get_maxcut_qubitops(weight_matrix):
     """Generate Hamiltonian for the maximum stableset in a graph.
