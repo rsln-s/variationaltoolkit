@@ -99,12 +99,14 @@ class IBMQXVarForm(object):
                             coupling_map=self.coupling_map, 
                             noise_model=None,
                             basis_gates=self.basis_gates)
+                    res['result'] = qobj.result()
                 else:
                     # quantum backend
                     start = time.time()
                     start_time_utc = pytz.utc.localize(datetime.datetime.utcnow())
                     qobj = execute(qc, backend=backend, 
                             shots=samples)
+                    res['result'] = qobj.result()
                     end = time.time()
                     end_time_utc = pytz.utc.localize(datetime.datetime.utcnow())
                     timezone = "America/Chicago"
@@ -120,7 +122,6 @@ class IBMQXVarForm(object):
                                                               runtime_seconds,
                                                               backend_name]])
                             f.write(line+'\n')
-                res['result'] = qobj.result()
                 
                 if return_all:
                     return res 
