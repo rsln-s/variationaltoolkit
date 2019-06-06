@@ -8,6 +8,7 @@ from qiskit.providers.aer import noise
 from ibmqxbackend.aqua.qaoa import QAOAVarForm
 from ibmqxbackend.aqua.modularity_ising import get_modularity_qubitops
 from ibmqxbackend.aqua.maxcut_ising import get_maxcut_qubitops
+from ibmqxbackend.aqua.docplex_ising import get_general_ising_qubitops
 from time import sleep
 import os
 import time
@@ -70,6 +71,11 @@ class IBMQXVarForm(object):
                 A = problem_description['A']
                 qubitOp, shift = get_maxcut_qubitops(A)
                 self.shift = shift
+            elif problem_description['name'] == 'ising':
+                B_matrix = problem_description['B_matrix']
+                B_bias = problem_description['B_bias']
+                qubitOp, shift = get_general_ising_qubitops(B_matrix, B_bias)
+                self.shift = shift
             else:
                 raise ValueError("Unsupported problem: {}".format(problem_description['name']))
             self.var_form = QAOAVarForm(qubitOp, depth)
@@ -95,7 +101,6 @@ class IBMQXVarForm(object):
                 if backend_name is None or "simulator" in backend_name:
                     qobj = execute(qc, backend=backend, 
                             shots=samples, 
-                            seed=seed, 
                             coupling_map=self.coupling_map, 
                             noise_model=None,
                             basis_gates=self.basis_gates)

@@ -5,80 +5,21 @@
 # for i in $(seq 10 30); do ./benchmark_ansatz.py -q $i; done
 #
 
-# Import the Qiskit SDK
-from qiskit import IBMQ, Aer 
-import time
-import numpy as np
-from difflib import ndiff
 import argparse
+import timeit
 import logging
-import sys
-import pickle
-#from qiskit.backends.jobstatus import JobStatus, JOB_FINAL_STATES
-import networkx as nx
-from ibmqxbackend.ansatz import IBMQXVarForm
+import numpy as np
+from qcommunity.optimization.obj import get_obj_val
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-q", type=int, default=5, help="number of qubits")
+parser.add_argument("-q", type=int, default=5, help="number of qubits / 2 (total number of qubits is 2*q)")
 args = parser.parse_args()
 
 logging.basicConfig(level=logging.INFO)
 
-G = nx.connected_caveman_graph(2, 3)
-B = nx.modularity_matrix(G)
-
-var_form = IBMQXVarForm(num_qubits=args.q, depth=1, var_form='QAOA', B=B)
-
-parameters = np.random.uniform(-np.pi, np.pi, var_form.num_parameters)
-
-# See a list of available local simulators
-print("Backends: ", IBMQ.backends(), Aer.backends())
-#backend_name = "ibmq_5_tenerife"
-#backend_name = "ibmq_16_melbourne"
-backend_name = "qasm_simulator"
-#backend_name = "local_qasm_simulator_py"
-
-print("running on {}...".format(backend_name))
-
-res = var_form.run(parameters, backend_name=backend_name, return_all=True)
-#import timeit
-#start_time = timeit.default_timer()
-#res = var_form.run(parameters, backend_name=backend_name)
-#print("Finished in: ", timeit.default_timer() - start_time)
-
-print(res['uncompiled_qasm'])
-#print('------------------------------')
-#print(res['compiled_qasm'])
-
-#print(res)
-
-if False:
-    # set to True to see what changed in compilation
-    print("Changed in compilation:")
-    diff = ndiff(res['uncompiled_qasm'].splitlines(keepends=True), res['compiled_qasm'].splitlines(keepends=True))
-    print(''.join(diff), end="")
-
-#outname = 'stuff/rueschlikon.p'
-#pickle.dump(res, open(outname, "wb"))
-
-#lapse = 0
-#interval = 1
-#while True:
-#    print('Status @ {} seconds'.format(interval * lapse))
-#    print(job.status())
-#    if job.status() in JOB_FINAL_STATES:
-#        break
-#    time.sleep(interval)
-#    lapse += 1
-#
-#print(job.status)
-
-
-#print(res)
-#import pdb
-#pdb.set_trace()
-
-#print(res['result'])
-# Show the results
-#counts = result.get_counts()
-#print(counts)
+p = 2
+obj_val, num_parameters = get_obj_val("get_connected_caveman_graph", 2, args.q, seed=1, obj_params='ndarray', backend='IBMQX', backend_params={'backend_device': 'qasm_simulator', 'depth': p, 'var_form':'QAOA'}, sign=-1)
+y = np.random.uniform(-np.pi, np.pi, num_parameters)
+start_time = timeit.default_timer()
+print(obj_val(y))
+print("Finished in: {:.2f} sec".format(timeit.default_timer() - start_time))
