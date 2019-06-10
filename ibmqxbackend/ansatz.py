@@ -28,14 +28,7 @@ class IBMQXVarForm(object):
     """
 
     def __init__(self, problem_description, depth=3, var_form='RYRZ', APItoken=None, target_backend_name=None):
-        if len(IBMQ.active_accounts()) <= 1:
-            # try just loading
-            IBMQ.load_accounts()
-            # if that didn't work, resort to grabbing tokens
-            if len(IBMQ.active_accounts()) <= 1: 
-                # try grabbing token from environment
-                logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
-                IBMQ.enable_account(os.environ['QE_TOKEN'], os.environ['QE_URL'])
+        self.check_and_load_accounts()
         try:
             num_qubits = problem_description['num_qubits']
         except KeyError:
@@ -84,10 +77,21 @@ class IBMQXVarForm(object):
         self.num_parameters = self.var_form._num_parameters
         logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
 
+    def check_and_load_accounts(self):
+        if len(IBMQ.active_accounts()) <= 1:
+            # try just loading
+            IBMQ.load_accounts()
+            # if that didn't work, resort to grabbing tokens
+            if len(IBMQ.active_accounts()) <= 1: 
+                # try grabbing token from environment
+                logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
+                IBMQ.enable_account(os.environ['QE_TOKEN'], os.environ['QE_URL'])
+
     def run(self, parameters, backend_name="qasm_simulator", return_all=False, samples=1000, seed=42, nattempts=25):
         if backend_name is None or "simulator" in backend_name:
             backend = Aer.get_backend("qasm_simulator")
         else:
+            self.check_and_load_accounts()
             backend = IBMQ.get_backend(backend_name)
         for attempt in range(0,nattempts):
             try:
