@@ -49,8 +49,8 @@ class IBMQXVarForm(object):
                 self.coupling_map = target_backend.configuration().coupling_map
 
                 # Generate an Aer noise model for target_backend
-                self.noise_model = noise.device.basic_device_noise_model(properties)
-                self.basis_gates = self.noise_model.basis_gates
+                # self.noise_model = noise.device.basic_device_noise_model(properties) # unreliable
+                # self.basis_gates = self.noise_model.basis_gates
             self.var_form.init_args(num_qubits, depth, entanglement='linear')
             self.shift = 0
         elif var_form == 'QAOA':
@@ -107,7 +107,7 @@ class IBMQXVarForm(object):
                             shots=samples, 
                             coupling_map=self.coupling_map, 
                             noise_model=None,
-                            basis_gates=self.basis_gates)
+                            basis_gates=None)
                     res['result'] = qobj.result()
                 else:
                     # quantum backend
