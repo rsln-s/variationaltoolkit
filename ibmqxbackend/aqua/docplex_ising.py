@@ -57,7 +57,6 @@ from docplex.mp.model import Model
 from qiskit.quantum_info import Pauli
 
 from qiskit.aqua import Operator, AquaError
-from qiskit.aqua.translators.ising import docplex as docplex_aqua
 
 logger = logging.getLogger(__name__)
 
@@ -72,26 +71,7 @@ def get_general_ising_qubitops(B, bias):
     bias_func = mdl.sum(float(bias[i]) * x[i] for i in range(n))
     ising_func = couplers_func + bias_func
     mdl.minimize(ising_func)
-    solution = mdl.solve()
-    cplex_solution = solution.get_all_values()
-    print('CPLEX solution: ', [int(1-2*i) for i in cplex_solution])
-    from qcommunity.utils.ising_obj import ising_objective as rs_ising_objective
-    print('CPLEX energy:', rs_ising_objective({'B_matrix':B, 'B_bias':bias}, cplex_solution))
-    #return get_qubitops(mdl)
-
-    from qiskit.aqua.algorithms import ExactEigensolver
-    qubitOp_docplex, offset_docplex = docplex_aqua.get_qubitops(mdl)
-    ee = ExactEigensolver(qubitOp_docplex, k=1)
-    result = ee.run()
-    
-    x = sample_most_likely(result['eigvecs'][0])
-    print('energy:', result['energy'])
-    print('QAOA objective:', result['energy'] + offset_docplex)
-    print('QAOA solution:', [int(1-2*i) for i in x])
-    print("QAOA energy : ", rs_ising_objective({'B_matrix':B, 'B_bias':bias}, x))
-
-    import ipdb; ipdb.set_trace()
-    return qubitOp_docplex, offset_docplex
+    return get_qubitops(mdl)
 
 
 def get_qubitops(mdl, auto_penalty=True, default_penalty=1e5):
@@ -135,6 +115,9 @@ def get_qubitops(mdl, auto_penalty=True, default_penalty=1e5):
     shift = 0
     zero = np.zeros(num_nodes, dtype=np.bool)
 
+    # convert a constant part of the object function into Hamiltonian.
+    shift += mdl.get_objective_expr().get_constant() * sign
+
     # convert linear parts of the object function into Hamiltonian.
     l_itr = mdl.get_objective_expr().iter_terms()
     for j in l_itr:
@@ -153,10 +136,13 @@ def get_qubitops(mdl, auto_penalty=True, default_penalty=1e5):
         index2 = qd[i[0][1]]
         weight = i[1] * sign / 4
 
-        zp = np.zeros(num_nodes, dtype=np.bool)
-        zp[index1] = True
-        zp[index2] = True
-        pauli_list.append([weight, Pauli(zp, zero)])
+        if index1 == index2:
+            shift += weight
+        else:
+            zp = np.zeros(num_nodes, dtype=np.bool)
+            zp[index1] = True
+            zp[index2] = True
+            pauli_list.append([weight, Pauli(zp, zero)])
 
         zp = np.zeros(num_nodes, dtype=np.bool)
         zp[index1] = True
