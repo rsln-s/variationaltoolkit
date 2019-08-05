@@ -78,11 +78,11 @@ class IBMQXVarForm(object):
         logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
 
     def check_and_load_accounts(self):
-        if len(IBMQ.active_accounts()) <= 1:
+        if IBMQ.active_account() is None:
             # try just loading
-            IBMQ.load_accounts()
+            IBMQ.load_account()
             # if that didn't work, resort to grabbing tokens
-            if len(IBMQ.active_accounts()) <= 1: 
+            if IBMQ.active_account() is None: 
                 # try grabbing token from environment
                 logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
                 IBMQ.enable_account(os.environ['QE_TOKEN'], os.environ['QE_URL'])
@@ -106,6 +106,7 @@ class IBMQXVarForm(object):
                     qobj = execute(qc, backend=backend, 
                             shots=samples, 
                             coupling_map=self.coupling_map, 
+                            seed_simulator=seed,
                             noise_model=None,
                             basis_gates=None)
                     res['result'] = qobj.result()
