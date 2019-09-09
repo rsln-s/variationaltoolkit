@@ -106,6 +106,7 @@ class IBMQXVarForm(object):
                     qobj = execute(qc, backend=backend, 
                             shots=samples, 
                             coupling_map=self.coupling_map, 
+                            seed_simulator=seed,
                             noise_model=None,
                             basis_gates=None)
                     res['result'] = qobj.result()
