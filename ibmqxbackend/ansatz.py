@@ -78,14 +78,10 @@ class IBMQXVarForm(object):
         logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
 
     def check_and_load_accounts(self):
-        if len(IBMQ.active_accounts()) <= 1:
-            # try just loading
-            IBMQ.load_accounts()
-            # if that didn't work, resort to grabbing tokens
-            if len(IBMQ.active_accounts()) <= 1: 
-                # try grabbing token from environment
-                logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
-                IBMQ.enable_account(os.environ['QE_TOKEN'], os.environ['QE_URL'])
+        if IBMQ.active_account() is None:
+            # try grabbing token from environment
+            logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
+            IBMQ.enable_account(os.environ['QE_TOKEN'])
 
     def run(self, parameters, backend_name="qasm_simulator", return_all=False, samples=1000, seed=42, nattempts=25):
         if backend_name is None or "simulator" in backend_name:
