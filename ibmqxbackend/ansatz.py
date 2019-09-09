@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 from qiskit import IBMQ, Aer, execute
-from qiskit import compile
 from ibmqxbackend.aqua.ryrz import VarFormRYRZ
 from ibmqxbackend.aqua.entangler_map import get_entangler_map_for_device
 from qiskit.providers.aer import noise
+from qiskit.transpiler.passmanager import PassManager
 from ibmqxbackend.aqua.qaoa import QAOAVarForm
 from ibmqxbackend.aqua.modularity_ising import get_modularity_qubitops
 from ibmqxbackend.aqua.maxcut_ising import get_maxcut_qubitops
@@ -103,6 +103,7 @@ class IBMQXVarForm(object):
                             shots=samples, 
                             coupling_map=self.coupling_map, 
                             seed_simulator=seed,
+                            pass_manager=PassManager(),
                             noise_model=None,
                             basis_gates=None)
                     res['result'] = qobj.result()
