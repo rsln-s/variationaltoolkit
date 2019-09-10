@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 from qiskit import IBMQ, Aer, execute
-from qiskit import compile, QISKitError
 from ibmqxbackend.aqua.ryrz import VarFormRYRZ
 from ibmqxbackend.aqua.entangler_map import get_entangler_map_for_device
 from qiskit.providers.aer import noise
+from qiskit.transpiler.passmanager import PassManager
 from ibmqxbackend.aqua.qaoa import QAOAVarForm
 from ibmqxbackend.aqua.modularity_ising import get_modularity_qubitops
 from ibmqxbackend.aqua.maxcut_ising import get_maxcut_qubitops
+from ibmqxbackend.aqua.docplex_ising import get_general_ising_qubitops
 from time import sleep
 import os
 import time
@@ -27,14 +28,7 @@ class IBMQXVarForm(object):
     """
 
     def __init__(self, problem_description, depth=3, var_form='RYRZ', APItoken=None, target_backend_name=None):
-        if len(IBMQ.active_accounts()) <= 1:
-            # try just loading
-            IBMQ.load_accounts()
-            # if that didn't work, resort to grabbing tokens
-            if len(IBMQ.active_accounts()) <= 1: 
-                # try grabbing token from environment
-                logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
-                IBMQ.enable_account(os.environ['QE_TOKEN'], os.environ['QE_URL'])
+        self.check_and_load_accounts()
         try:
             num_qubits = problem_description['num_qubits']
         except KeyError:
@@ -55,8 +49,8 @@ class IBMQXVarForm(object):
                 self.coupling_map = target_backend.configuration().coupling_map
 
                 # Generate an Aer noise model for target_backend
-                self.noise_model = noise.device.basic_device_noise_model(properties)
-                self.basis_gates = self.noise_model.basis_gates
+                # self.noise_model = noise.device.basic_device_noise_model(properties) # unreliable
+                # self.basis_gates = self.noise_model.basis_gates
             self.var_form.init_args(num_qubits, depth, entanglement='linear')
             self.shift = 0
         elif var_form == 'QAOA':
@@ -70,6 +64,11 @@ class IBMQXVarForm(object):
                 A = problem_description['A']
                 qubitOp, shift = get_maxcut_qubitops(A)
                 self.shift = shift
+            elif problem_description['name'] == 'ising':
+                B_matrix = problem_description['B_matrix']
+                B_bias = problem_description['B_bias']
+                qubitOp, shift = get_general_ising_qubitops(B_matrix, B_bias)
+                self.shift = shift
             else:
                 raise ValueError("Unsupported problem: {}".format(problem_description['name']))
             self.var_form = QAOAVarForm(qubitOp, depth)
@@ -78,10 +77,17 @@ class IBMQXVarForm(object):
         self.num_parameters = self.var_form._num_parameters
         logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
 
+    def check_and_load_accounts(self):
+        if IBMQ.active_account() is None:
+            # try grabbing token from environment
+            logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
+            IBMQ.enable_account(os.environ['QE_TOKEN'])
+
     def run(self, parameters, backend_name="qasm_simulator", return_all=False, samples=1000, seed=42, nattempts=25):
         if backend_name is None or "simulator" in backend_name:
             backend = Aer.get_backend("qasm_simulator")
         else:
+            self.check_and_load_accounts()
             backend = IBMQ.get_backend(backend_name)
         for attempt in range(0,nattempts):
             try:
@@ -95,16 +101,19 @@ class IBMQXVarForm(object):
                 if backend_name is None or "simulator" in backend_name:
                     qobj = execute(qc, backend=backend, 
                             shots=samples, 
-                            seed=seed, 
                             coupling_map=self.coupling_map, 
+                            seed_simulator=seed,
+                            pass_manager=PassManager(), # turn off all optimization for simulator
                             noise_model=None,
-                            basis_gates=self.basis_gates)
+                            basis_gates=None)
+                    res['result'] = qobj.result()
                 else:
                     # quantum backend
                     start = time.time()
                     start_time_utc = pytz.utc.localize(datetime.datetime.utcnow())
                     qobj = execute(qc, backend=backend, 
                             shots=samples)
+                    res['result'] = qobj.result()
                     end = time.time()
                     end_time_utc = pytz.utc.localize(datetime.datetime.utcnow())
                     timezone = "America/Chicago"
@@ -120,7 +129,6 @@ class IBMQXVarForm(object):
                                                               runtime_seconds,
                                                               backend_name]])
                             f.write(line+'\n')
-                res['result'] = qobj.result()
                 
                 if return_all:
                     return res 
