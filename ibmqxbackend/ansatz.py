@@ -103,7 +103,7 @@ class IBMQXVarForm(object):
                             shots=samples, 
                             coupling_map=self.coupling_map, 
                             seed_simulator=seed,
-                            pass_manager=PassManager(),
+                            pass_manager=PassManager(), # turn off all optimization for simulator
                             noise_model=None,
                             basis_gates=None)
                     res['result'] = qobj.result()
