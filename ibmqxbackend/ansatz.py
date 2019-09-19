@@ -27,8 +27,15 @@ class IBMQXVarForm(object):
     By default uses Qconfig.py file in the root folder of ibmqxbackend module
     """
 
-    def __init__(self, problem_description, depth=3, var_form='RYRZ', APItoken=None, target_backend_name=None):
+    def __init__(self, problem_description, backend_params=None, depth=3, var_form='RYRZ', APItoken=None, target_backend_name=None):
         self.check_and_load_accounts()
+        if backend_params is None:
+            self.depth = depth
+            self.var_form_name = var_form
+        else:
+            self.depth=backend_params['depth'] 
+            self.var_form_name=backend_params['var_form'] 
+
         try:
             num_qubits = problem_description['num_qubits']
         except KeyError:
@@ -36,9 +43,9 @@ class IBMQXVarForm(object):
         self.coupling_map = None
         self.noise_model = None
         self.basis_gates = None
-        if var_form == 'RYRZ':
+        if self.var_form_name == 'RYRZ':
             self.var_form = VarFormRYRZ()
-            self.var_form.init_args(num_qubits, depth, entangler_map=get_entangler_map_for_device(target_backend_name, num_qubits))
+            self.var_form.init_args(num_qubits, self.depth, entangler_map=get_entangler_map_for_device(target_backend_name, num_qubits))
             self.num_parameters = self.var_form._num_parameters
             self.target_backend_name = target_backend_name
 
@@ -51,9 +58,13 @@ class IBMQXVarForm(object):
                 # Generate an Aer noise model for target_backend
                 # self.noise_model = noise.device.basic_device_noise_model(properties) # unreliable
                 # self.basis_gates = self.noise_model.basis_gates
-            self.var_form.init_args(num_qubits, depth, entanglement='linear')
+            self.var_form.init_args(num_qubits, self.depth, entanglement='linear')
             self.shift = 0
-        elif var_form == 'QAOA':
+        elif self.var_form_name == 'QAOA':
+            if backend_params is not None and 'mixer_operator' in backend_params:
+                mixerOp = backend_params['mixer_operator']
+            else:
+                mixerOp = None
             if problem_description['name'] == 'modularity':
                 B = problem_description['B']
                 if B is None:
@@ -71,17 +82,20 @@ class IBMQXVarForm(object):
                 self.shift = shift
             else:
                 raise ValueError("Unsupported problem: {}".format(problem_description['name']))
-            self.var_form = QAOAVarForm(qubitOp, depth)
+            self.var_form = QAOAVarForm(qubitOp, self.depth, mixer_operator=mixerOp)
         else:
-            raise ValueError("Incorrect var_form {}".format(var_form))
+            raise ValueError("Incorrect var_form {}".format(self.var_form_name))
         self.num_parameters = self.var_form._num_parameters
-        logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(var_form, num_qubits, depth))
+        logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(self.var_form_name, num_qubits, self.depth))
 
     def check_and_load_accounts(self):
         if IBMQ.active_account() is None:
-            # try grabbing token from environment
-            logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
-            IBMQ.enable_account(os.environ['QE_TOKEN'])
+            # try loading account
+            IBMQ.load_account()
+            if IBMQ.active_account() is None:
+                # try grabbing token from environment
+                logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
+                IBMQ.enable_account(os.environ['QE_TOKEN'])
 
     def run(self, parameters, backend_name="qasm_simulator", return_all=False, samples=1000, seed=42, nattempts=25):
         if backend_name is None or "simulator" in backend_name:
