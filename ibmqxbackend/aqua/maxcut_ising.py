@@ -24,29 +24,26 @@ from qiskit.aqua/translators/ising/maxcut.py
 
 import numpy as np
 from qiskit.quantum_info import Pauli
-from qiskit.aqua import Operator
+from qiskit.aqua.operators import WeightedPauliOperator
 
 def get_maxcut_qubitops(weight_matrix):
-    """Generate Hamiltonian for the maximum stableset in a graph.
-    
+    """Generate Hamiltonian for the max-cut problem of a graph.
     Args:
         weight_matrix (numpy.ndarray) : adjacency matrix.
-    
     Returns:
-        operator.Operator, float: operator for the Hamiltonian and a
-        constant shift for the obj function.
-    
+        WeightedPauliOperator: operator for the Hamiltonian
+        float: a constant shift for the obj function.
     """
     num_nodes = weight_matrix.shape[0]
     pauli_list = []
     shift = 0
     for i in range(num_nodes):
         for j in range(i):
-            if (weight_matrix[i,j] != 0):
-                wp = np.zeros(num_nodes)
-                vp = np.zeros(num_nodes)
-                vp[i] = 1
-                vp[j] = 1
-                pauli_list.append([0.5 * weight_matrix[i, j], Pauli(vp, wp)])
+            if weight_matrix[i, j] != 0:
+                x_p = np.zeros(num_nodes, dtype=np.bool)
+                z_p = np.zeros(num_nodes, dtype=np.bool)
+                z_p[i] = True
+                z_p[j] = True
+                pauli_list.append([0.5 * weight_matrix[i, j], Pauli(z_p, x_p)])
                 shift -= 0.5 * weight_matrix[i, j]
-    return Operator(paulis=pauli_list), shift
+    return WeightedPauliOperator(paulis=pauli_list), shift
