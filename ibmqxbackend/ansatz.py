@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-from qiskit import IBMQ, Aer, execute
-from ibmqxbackend.aqua.ryrz import VarFormRYRZ
-from ibmqxbackend.aqua.entangler_map import get_entangler_map_for_device
+from qiskit import IBMQ, Aer, execute, ClassicalRegister
 from qiskit.providers.aer import noise
 from qiskit.transpiler.passmanager import PassManager
-from ibmqxbackend.aqua.qaoa import QAOAVarForm
+from qiskit.aqua.algorithms.adaptive.qaoa.var_form import QAOAVarForm 
+from qiskit.aqua.components.variational_forms.ryrz import RYRZ 
+from ibmqxbackend.aqua.entangler_map import get_entangler_map_for_device
 from ibmqxbackend.aqua.modularity_ising import get_modularity_qubitops
 from ibmqxbackend.aqua.maxcut_ising import get_maxcut_qubitops
 from ibmqxbackend.aqua.docplex_ising import get_general_ising_qubitops
@@ -37,16 +37,13 @@ class IBMQXVarForm(object):
             self.var_form_name=backend_params['var_form'] 
 
         try:
-            num_qubits = problem_description['num_qubits']
+            self.num_qubits = problem_description['num_qubits']
         except KeyError:
-            num_qubits = problem_description['n_nodes']
+            self.num_qubits = problem_description['n_nodes']
         self.coupling_map = None
         self.noise_model = None
         self.basis_gates = None
         if self.var_form_name == 'RYRZ':
-            self.var_form = VarFormRYRZ()
-            self.var_form.init_args(num_qubits, self.depth, entangler_map=get_entangler_map_for_device(target_backend_name, num_qubits))
-            self.num_parameters = self.var_form._num_parameters
             self.target_backend_name = target_backend_name
 
             if self.target_backend_name is not None:
@@ -58,7 +55,7 @@ class IBMQXVarForm(object):
                 # Generate an Aer noise model for target_backend
                 # self.noise_model = noise.device.basic_device_noise_model(properties) # unreliable
                 # self.basis_gates = self.noise_model.basis_gates
-            self.var_form.init_args(num_qubits, self.depth, entanglement='linear')
+            self.var_form = RYRZ(self.num_qubits, self.depth, entanglement='linear')
             self.shift = 0
         elif self.var_form_name == 'QAOA':
             if backend_params is not None and 'mixer_operator' in backend_params:
@@ -85,8 +82,8 @@ class IBMQXVarForm(object):
             self.var_form = QAOAVarForm(qubitOp, self.depth, mixer_operator=mixerOp)
         else:
             raise ValueError("Incorrect var_form {}".format(self.var_form_name))
-        self.num_parameters = self.var_form._num_parameters
-        logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(self.var_form_name, num_qubits, self.depth))
+        self.num_parameters = self.var_form.num_parameters
+        logging.info("Initialized IBMQXVarForm {} with num_qubits={}, depth={}".format(self.var_form_name, self.num_qubits, self.depth))
 
     def check_and_load_accounts(self):
         if IBMQ.active_account() is None:
@@ -110,6 +107,10 @@ class IBMQXVarForm(object):
                 qc = self.var_form.construct_circuit(parameters)
 
                 # kinda hacky
+                if not qc.cregs:
+                    c = ClassicalRegister(self.num_qubits, name='c')
+                    qc.add_register(c)
+
                 qc.measure(qc.qregs[0], qc.cregs[0])
 
                 if backend_name is None or "simulator" in backend_name:
