@@ -1,0 +1,13 @@
+#PBS -N mps_qscaling
+#PBS -l select=1:ncpus=16:mem=60gb:interconnect=fdr,walltime=72:00:00
+
+source ~/bash_setup/packages_qcommunity_ml.sh
+export PATH="/home/rshaydu/soft/anaconda3/bin:$PATH"
+source activate qcommunity_ml
+
+cd /home/rshaydu/quantum/ibmqxbackend_multilevel/ibmqxbackend/benchmarking/mps_simulator
+
+for q in $(seq 100 10 1000);
+do
+    ./main.py -q $q -d 1 --save depth1_qubits_vary.csv
+done
