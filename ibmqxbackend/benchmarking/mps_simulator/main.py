@@ -6,25 +6,39 @@ import argparse
 import timeit
 import numpy as np
 import csv
+import networkx as nx
 from pathlib import Path
 from qiskit import Aer, execute, ClassicalRegister, QuantumRegister, QuantumCircuit
 from qiskit.aqua.components.variational_forms import RYRZ
+from qiskit.aqua.algorithms.adaptive.qaoa.var_form import QAOAVarForm 
+from ibmqxbackend.aqua.maxcut_ising import get_maxcut_qubitops
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-q", type=int, default=5, help="number of qubits / 2 (total number of qubits is 2*q)")
 parser.add_argument("-d", type=int, default=1, help="depth (number of layers)")
+parser.add_argument("--var-form", type=str, default='RYRZ', help="variational form to test")
 parser.add_argument(
     "--save",
     help="saves summarized results as a csv, with name as parameter. If csv exists, it appends to the end",
     type=str)
 args = parser.parse_args()
 
-var_form = RYRZ(args.q, depth=args.d, entanglement='linear', entanglement_gate='cx')
-parameters = np.random.uniform(0, np.pi, var_form._num_parameters)
+num_qubits = args.q
+
+if args.var_form == 'RYRZ':
+    var_form = RYRZ(args.q, depth=args.d, entanglement='linear', entanglement_gate='cx')
+    num_parameters = var_form._num_parameters
+elif args.var_form == 'QAOA':
+    A = nx.adjacency_matrix(nx.random_regular_graph(4, args.q)).todense()
+    qubitOp, shift = get_maxcut_qubitops(A)
+    var_form = QAOAVarForm(qubitOp, args.d) 
+    num_parameters = var_form.num_parameters
+
+parameters = np.random.uniform(0, np.pi, num_parameters)
 qc = var_form.construct_circuit(parameters)
 if not qc.cregs:
-    c = ClassicalRegister(var_form._num_qubits, name='c')
+    c = ClassicalRegister(num_qubits, name='c')
     qc.add_register(c)
 qc.measure(qc.qregs[0], qc.cregs[0])
 
