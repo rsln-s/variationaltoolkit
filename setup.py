@@ -1,9 +1,9 @@
 from setuptools import setup
 
-setup(name='variationaltoolkit',
-	description='a set of tools wrapping variational forms',
+setup(name='ibmqxbackend',
+	description='IBM Quantum Experience backend',
 	author='Ruslan Shaydulin',
 	author_email='rshaydu@g.clemson.edu',
-	packages=['variationaltoolkit'],
-    install_requires=['qiskit', 'mpsbackend'],
+	packages=['ibmqxbackend'],
+    install_requires=['qiskit'],
 	zip_safe=False)
