@@ -5,5 +5,5 @@ setup(name='variationaltoolkit',
 	author='Ruslan Shaydulin',
 	author_email='rshaydu@g.clemson.edu',
 	packages=['variationaltoolkit'],
-    install_requires=['qiskit', 'mpsbackend'],
+    install_requires=['qiskit'],
 	zip_safe=False)
