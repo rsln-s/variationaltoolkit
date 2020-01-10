@@ -1,5 +1,6 @@
 import importlib.util
 import sys
+import numpy as np
 
 # a recipe for conditional import from https://docs.python.org/3/library/importlib.html#checking-if-a-module-can-be-imported
 _spec = importlib.util.find_spec('mpsbackend')
@@ -89,5 +90,6 @@ class VarForm:
         else:
             resstrs = []
             for k, v in result.get_counts().items():
-                resstrs.extend([tuple(int(x) for x in k)]*v)
+                for _ in range(v):
+                    resstrs.append(np.array([int(x) for x in k]))
             return resstrs
