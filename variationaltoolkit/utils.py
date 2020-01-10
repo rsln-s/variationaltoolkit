@@ -23,3 +23,14 @@ def execute_wrapper(experiments, backend, **kwargs):
         else:
             raise ValueError(f"Unknown backend: {backend!r}")
 
+def validate_objective(obj, problem_size):
+    x = [0]*problem_size
+    try:
+        obj(x)
+    except Exception as e:
+        print(f"objective function does not correctly accept lists of size {problem_size}, encountered {e}")
+
+def contains_and_raised(d, k):
+    if k not in d:
+        return False
+    return bool(d[k])
