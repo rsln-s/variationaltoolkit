@@ -16,7 +16,6 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
 
     def test_maxcut(self):
         import logging; logging.disable(logging.CRITICAL)
-        logging.basicConfig(level=logging.ERROR)
         varopt = VariationalQuantumOptimizer(
                 self.obj, 
                 'COBYLA', 
