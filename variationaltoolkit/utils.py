@@ -1,4 +1,5 @@
 import os
+import numpy as np
 from qiskit import IBMQ
 from qiskit import execute as qiskit_execute
 from qiskit.providers.aer.backends.aerbackend import AerBackend
@@ -24,13 +25,14 @@ def execute_wrapper(experiments, backend, **kwargs):
             raise ValueError(f"Unknown backend: {backend!r}")
 
 def validate_objective(obj, problem_size):
-    x = [0]*problem_size
+    x = np.zeros(problem_size)
     try:
         obj(x)
     except Exception as e:
         print(f"objective function does not correctly accept lists of size {problem_size}, encountered {e}")
+        raise e
 
 def contains_and_raised(d, k):
-    if k not in d:
+    if d is None or k not in d:
         return False
     return bool(d[k])

@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 from .varform import VarForm
 from .utils import validate_objective, contains_and_raised
 
@@ -19,14 +20,12 @@ class ObjectiveWrapper:
             backend_description (dict) : See varform.py
             execute_parameters (dict)  : Parameters passed to execute function (e.g. {'shots': 8000})
             objective_parameters (dict)  : Parameters for objective function. 
-                                           Required fields:
-                                           'problem_size' (int) -- size of the problem (number of qubits)
                                            Accepted fields:
                                            'save_vals' (bool) -- save values of the objective function 
                                            Note: statistic on the value of objective function (e.g. mean) is saved automatically
                                            'save_resstrs' (bool) -- save all raw resstrs
         """
-        validate_objective(obj, objective_parameters['problem_size'])
+        validate_objective(obj, varform_description['num_qubits'])
 
         self.obj = obj
         self.varform_description = varform_description
@@ -56,6 +55,7 @@ class ObjectiveWrapper:
 
             # TODO: should allow for different statistics (e.g. CVAR)
             objective_value = np.mean(vals) 
+            logging.info(f"called at step {len(self.vals_statistic)}, objective: {objective_value} at point {theta}")
             self.vals_statistic.append(objective_value)
 
             return objective_value

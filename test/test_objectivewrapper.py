@@ -14,7 +14,7 @@ class TestObjectiveWrapper(unittest.TestCase):
         self.obj = partial(maxcut_obj, w=w) 
 
     def test_get_obj(self):
-        obj_w = ObjectiveWrapper(self.obj, objective_parameters={'problem_size':4}, varform_description=self.varform_description, backend_description=self.backend_description, execute_parameters=self.execute_parameters)
+        obj_w = ObjectiveWrapper(self.obj, varform_description=self.varform_description, backend_description=self.backend_description, execute_parameters=self.execute_parameters)
         obj_f = obj_w.get_obj()
         parameters = np.random.uniform(0, np.pi, obj_w.var_form.num_parameters)
         val = obj_f(parameters)
