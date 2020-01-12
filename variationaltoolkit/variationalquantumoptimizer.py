@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 from operator import itemgetter
 import qiskit.aqua.components.optimizers as qiskit_optimizers
 from .objectivewrapper import ObjectiveWrapper
@@ -58,12 +59,15 @@ class VariationalQuantumOptimizer:
 
         return self.res
 
-    def get_optimal_solution(self):
+    def get_optimal_solution(self, shots=None):
         """
         TODO: should support running separately on device
         Returns minimal(!!) energy string
         """
-        resstrs = self.obj_w.var_form.run(self.res['opt_params'], backend_description=self.backend_description, execute_parameters=self.execute_parameters)
+        final_execute_parameters = copy.deepcopy(self.execute_parameters)
+        if shots is not None:
+            final_execute_parameters['shots'] = shots
+        resstrs = self.obj_w.var_form.run(self.res['opt_params'], backend_description=self.backend_description, execute_parameters=final_execute_parameters)
 
         objectives = [(self.obj(x), x) for x in resstrs]
         return min(objectives, key=itemgetter(0))
