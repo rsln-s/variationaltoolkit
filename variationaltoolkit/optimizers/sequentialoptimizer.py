@@ -74,7 +74,8 @@ class SequentialOptimizer(Optimizer):
 
     # Main Optimization Function
     # Performs Compass Search / Coordinate Search Method
-    def optimize(self, num_parameters, objective, initial_point = None):
+    def optimize(self, num_parameters, objective, gradient_function=None,
+                 variable_bounds=None, initial_point = None):
 
         #initialize the angles
         angles = initial_point 
