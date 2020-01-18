@@ -36,3 +36,13 @@ def contains_and_raised(d, k):
     if d is None or k not in d:
         return False
     return bool(d[k])
+
+def allclose_periodical(x, y, a, b, atol=1e-10):
+    """
+    Checks np.allclose(x,y), but assumes both x and y are periodical with respect to interval (a,b)
+    """
+    assert(len(x) == len(y))
+    period = b-a
+    x_p = np.remainder(x-a,period) # now in 0, b-a
+    y_p = np.remainder(y-a,period)
+    return all(np.isclose(x_p[i], y_p[i], atol=atol) or np.isclose(x_p[i], y_p[i]+period, atol=atol) or np.isclose(x_p[i], y_p[i]-period, atol=atol) for i in range(len(x_p)))
