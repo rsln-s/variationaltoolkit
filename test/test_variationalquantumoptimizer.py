@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
+import networkx as nx
 from functools import partial
-from variationaltoolkit.objectives import maxcut_obj
+from variationaltoolkit.objectives import maxcut_obj, modularity_obj, bin_to_dec, compute_objective
 from variationaltoolkit import VariationalQuantumOptimizer
 
 class TestVariationalQuantumOptimizer(unittest.TestCase):
@@ -43,6 +44,27 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         self.assertEqual(res[0], -4)
         self.assertTrue(np.array_equal(res[1], np.array([1,0,0,1])) or np.array_equal(res[1], np.array([0,1,1,0])))
         logging.disable(logging.NOTSET)
+
+    def test_modularity(self):
+        w = np.array([[0,1,1,0,0,0],[1,0,1,0,0,0],[1,1,0,1,0,0],[0,0,1,0,1,1],[0,0,0,1,0,1],[0,0,0,1,1,0]])
+        G = nx.from_numpy_matrix(w)
+        for node in G.nodes():
+            G.nodes[node]['volume'] = 1
+        for u, v in G.edges():
+            G[u][v]['weight'] = 1
+        node_list = list(G.nodes())
+        mod_obj = partial(modularity_obj, N = 1, G = G, node_list = node_list)
+            
+        varopt = VariationalQuantumOptimizer(
+                 mod_obj, 
+                 'SequentialOptimizer', 
+                optimizer_parameters=self.optimizer_parameters, 
+                varform_description={'name':'RYRZ', 'num_qubits':6, 'depth':3, 'entanglement':'linear'}, 
+                backend_description={'package':'qiskit', 'provider':'Aer', 'name':'qasm_simulator'}, 
+                execute_parameters=self.execute_parameters)
+        varopt.optimize()
+        res = varopt.get_optimal_solution(shots=10000)
+        self.assertTrue(np.array_equal(res[1], np.array([0,0,0,1,1,1])) or np.array_equal(res[1], np.array([1,1,1,0,0,0])))
 
 if __name__ == '__main__':
     unittest.main()

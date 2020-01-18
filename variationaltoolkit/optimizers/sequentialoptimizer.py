@@ -80,7 +80,7 @@ class SequentialOptimizer(Optimizer):
         #initialize the angles
         angles = initial_point 
 
-        while (self.maxeval - self.evalused > 0):
+        while True:
             #iterate over parameters, in a random order
             oldAngles = copy.deepcopy(angles)
             for p in np.random.permutation(num_parameters):
@@ -121,9 +121,10 @@ class SequentialOptimizer(Optimizer):
 
                 if self.disp:
                     print(self.objV)
-            #if sweeping through the parameters did not update any of them, terminate optimization
+                if self.maxeval - self.evalused <= 0:
+                    break
 
-            # should be "close up to period"
+            #if sweeping through the parameters did not update any of them, terminate optimization
             if allclose_periodical(angles,oldAngles, 0, 2*np.pi, atol=self.atol):
                 break
         return angles, self.objV, self.evalused 
