@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import networkx as nx
 from functools import partial
-from variationaltoolkit.objectives import maxcut_obj, modularity_obj, bin_to_dec, compute_objective
+from variationaltoolkit.objectives import maxcut_obj, modularity_obj
 from variationaltoolkit import VariationalQuantumOptimizer
 
 class TestVariationalQuantumOptimizer(unittest.TestCase):
@@ -66,20 +66,6 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         res = varopt.get_optimal_solution(shots=10000)
         self.assertTrue(np.array_equal(res[1], np.array([0,0,0,1,1,1])) or np.array_equal(res[1], np.array([1,1,1,0,0,0])))
     
-    def test_modularity_value(self):
-        w = np.array([[0,1,1,0,0,0],[1,0,1,0,0,0],[1,1,0,1,0,0],[0,0,1,0,1,1],[0,0,0,1,0,1],[0,0,0,1,1,0]])
-        G = nx.from_numpy_matrix(w)
-        for node in G.nodes():
-            G.nodes[node]['volume'] = G.degree[node]
-        for u, v in G.edges():
-            G[u][v]['weight'] = 1
-        node_list = list(G.nodes())
-        x = np.array([0,0,0,1,1,1])
-        N = 1
-        y = np.array([0,0,0,1,1,0,1,1,1,1,1,1])
-        M = 2
-        self.assertTrue(modularity_obj(x, N, G, node_list) + 10/28 < 1e-5)
-        self.assertTrue(modularity_obj(y, M, G, node_list) + 9/98 < 1e-5)
         
 if __name__ == '__main__':
     unittest.main()
