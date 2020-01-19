@@ -33,10 +33,10 @@ def modularity_obj(x, N, G, node_list):
     n = G.number_of_nodes()
     node_dict = {node_list[i]: i for i in range(n)}
     if 'Cluster0' in G:
-        for node in node_list[:n-state_watcher.args.part]:
+        for node in node_list[:n-2**N]:
             ptn = bin_to_dec(x[node_dict[node]*N: (node_dict[node]+1)*N], N)
             ptn_variables[node] = ptn
-        for i in range(state_watcher.args.part):
+        for i in range(2**N):
             ptn_variables['Cluster'+str(i)] = i
     else:
         for node in node_list:
