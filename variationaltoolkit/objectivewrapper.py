@@ -33,7 +33,12 @@ class ObjectiveWrapper:
         self.execute_parameters = execute_parameters
         self.objective_parameters = objective_parameters
         self.backend_description = backend_description
-        self.var_form = VarForm(varform_description=varform_description, problem_description=problem_description)
+        if 'package' in self.varform_description and self.varform_description['package'] == 'mpsbackend':
+            import mpsbackend.variational_forms as mps_variational_forms
+            varform_parameters = {k : v for k,v in varform_description.items() if k != 'name' and k != 'package'}
+            self.var_form = getattr(mps_variational_forms, varform_description['name'])(**varform_parameters)
+        else:
+            self.var_form = VarForm(varform_description=varform_description, problem_description=problem_description)
         self.vals_statistic = []
         self.vals = []
         self.points = []

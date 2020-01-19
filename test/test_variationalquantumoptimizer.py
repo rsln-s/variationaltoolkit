@@ -45,6 +45,21 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         self.assertTrue(np.array_equal(res[1], np.array([1,0,0,1])) or np.array_equal(res[1], np.array([0,1,1,0])))
         logging.disable(logging.NOTSET)
 
+    def test_maxcut_mps_varform(self):
+        import logging; logging.disable(logging.CRITICAL)
+        varopt = VariationalQuantumOptimizer(
+                self.obj, 
+                'COBYLA', 
+                optimizer_parameters=self.optimizer_parameters, 
+                varform_description={'package':'mpsbackend', 'name':'RYRZ', 'num_qubits':4, 'depth':3}, 
+                backend_description=self.backend_description, 
+                execute_parameters=self.execute_parameters)
+        varopt.optimize()
+        res = varopt.get_optimal_solution()
+        self.assertEqual(res[0], -4)
+        self.assertTrue(np.array_equal(res[1], np.array([1,0,0,1])) or np.array_equal(res[1], np.array([0,1,1,0])))
+        logging.disable(logging.NOTSET)
+
     def test_modularity(self):
         w = np.array([[0,1,1,0,0,0],[1,0,1,0,0,0],[1,1,0,1,0,0],[0,0,1,0,1,1],[0,0,0,1,0,1],[0,0,0,1,1,0]])
         G = nx.from_numpy_matrix(w)
