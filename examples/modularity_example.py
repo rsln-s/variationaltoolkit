@@ -7,7 +7,7 @@ from variationaltoolkit.objectives import modularity_obj, bin_to_dec, compute_ob
 w = np.array([[0,1,1,0,0,0],[1,0,1,0,0,0],[1,1,0,1,0,0],[0,0,1,0,1,1],[0,0,0,1,0,1],[0,0,0,1,1,0]])
 G = nx.from_numpy_matrix(w)
 for node in G.nodes():
-    G.nodes[node]['volume'] = 1
+    G.nodes[node]['volume'] = G.degree[node]
 for u, v in G.edges():
     G[u][v]['weight'] = 1
 node_list = list(G.nodes())
