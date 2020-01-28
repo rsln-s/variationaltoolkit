@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 from variationaltoolkit import VarForm
 from qiskit.aqua.components.variational_forms import RYRZ
+from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
 
 class TestVarForm(unittest.TestCase):
 
@@ -21,6 +22,18 @@ class TestVarForm(unittest.TestCase):
                 execute_parameters=execute_parameters)
         self.assertEqual(len(resstrs), execute_parameters['shots'])
         self.assertTrue(all(len(x) == self.varform_description['num_qubits'] for x in resstrs))
+
+    def test_qaoa_maxcut(self):
+        w = np.array([[0,1,1,0],[1,0,1,1],[1,1,0,1],[0,1,1,0]])
+        C, offset = get_maxcut_operator(w)
+        var_form = VarForm(varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4})
+        parameters = np.random.uniform(0, np.pi, var_form.num_parameters)
+        execute_parameters={'shots':100}
+        resstrs = var_form.run(parameters, 
+                backend_description={'package':'qiskit', 'provider':'Aer', 'name':'qasm_simulator'},
+                execute_parameters=execute_parameters)
+        self.assertEqual(len(resstrs), execute_parameters['shots'])
+        self.assertTrue(all(len(x) == 4 for x in resstrs))
 
     def test_ryrz_mpssimulator(self):
         var_form = VarForm(varform_description=self.varform_description)
