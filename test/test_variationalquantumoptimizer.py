@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 import networkx as nx
 from functools import partial
+from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
 from variationaltoolkit.objectives import maxcut_obj, modularity_obj
 from variationaltoolkit import VariationalQuantumOptimizer
 
@@ -19,8 +20,8 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         self.backend_description={'package':'mpsbackend'}
         self.execute_parameters={'shots':1000}
         self.optimizer_parameters={'maxiter':50, 'disp':True}
-        w = np.array([[0,1,1,0],[1,0,1,1],[1,1,0,1],[0,1,1,0]])
-        self.obj = partial(maxcut_obj, w=w) 
+        self.w = np.array([[0,1,1,0],[1,0,1,1],[1,1,0,1],[0,1,1,0]])
+        self.obj = partial(maxcut_obj, w=self.w) 
 
     @unittest.skipIf(skip_mpsbackend, "mpsbackend not found")
     def test_maxcut(self):
@@ -91,6 +92,22 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         res = varopt.get_optimal_solution(shots=10000)
         self.assertTrue(np.array_equal(res[1], np.array([0,0,0,1,1,1])) or np.array_equal(res[1], np.array([1,1,1,0,0,0])))
     
+    def test_maxcut_qaoa(self):
+        import logging; logging.disable(logging.CRITICAL)
+        C, _ = get_maxcut_operator(self.w)
+        varopt = VariationalQuantumOptimizer(
+                self.obj, 
+                'COBYLA', 
+                optimizer_parameters=self.optimizer_parameters, 
+                varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4}, 
+                backend_description={'package':'qiskit', 'provider':'Aer', 'name':'qasm_simulator'}, 
+                execute_parameters=self.execute_parameters)
+        varopt.optimize()
+        res = varopt.get_optimal_solution()
+        self.assertEqual(res[0], -4)
+        self.assertTrue(np.array_equal(res[1], np.array([1,0,0,1])) or np.array_equal(res[1], np.array([0,1,1,0])))
+        logging.disable(logging.NOTSET)
+
         
 if __name__ == '__main__':
     unittest.main()
