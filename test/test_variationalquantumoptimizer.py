@@ -5,6 +5,13 @@ from functools import partial
 from variationaltoolkit.objectives import maxcut_obj, modularity_obj
 from variationaltoolkit import VariationalQuantumOptimizer
 
+import importlib.util
+import sys
+# a recipe for conditional import from https://docs.python.org/3/library/importlib.html#checking-if-a-module-can-be-imported
+_mpsspec = importlib.util.find_spec('mpsbackend')
+
+skip_mpsbackend = ('mpsbackend' not in sys.modules) and (_mpsspec is None)
+
 class TestVariationalQuantumOptimizer(unittest.TestCase):
 
     def setUp(self):
@@ -15,6 +22,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         w = np.array([[0,1,1,0],[1,0,1,1],[1,1,0,1],[0,1,1,0]])
         self.obj = partial(maxcut_obj, w=w) 
 
+    @unittest.skipIf(skip_mpsbackend, "mpsbackend not found")
     def test_maxcut(self):
         import logging; logging.disable(logging.CRITICAL)
         varopt = VariationalQuantumOptimizer(
@@ -30,6 +38,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         self.assertTrue(np.array_equal(res[1], np.array([1,0,0,1])) or np.array_equal(res[1], np.array([0,1,1,0])))
         logging.disable(logging.NOTSET)
 
+    @unittest.skipIf(skip_mpsbackend, "mpsbackend not found")
     def test_maxcut_seqopt(self):
         import logging; logging.disable(logging.CRITICAL)
         varopt = VariationalQuantumOptimizer(
@@ -45,6 +54,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         self.assertTrue(np.array_equal(res[1], np.array([1,0,0,1])) or np.array_equal(res[1], np.array([0,1,1,0])))
         logging.disable(logging.NOTSET)
 
+    @unittest.skipIf(skip_mpsbackend, "mpsbackend not found")
     def test_maxcut_mps_varform(self):
         import logging; logging.disable(logging.CRITICAL)
         varopt = VariationalQuantumOptimizer(

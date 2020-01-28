@@ -1,8 +1,15 @@
 import unittest
 import numpy as np
+import importlib.util
+import sys
 from variationaltoolkit import VarForm
 from qiskit.aqua.components.variational_forms import RYRZ
 from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
+
+# a recipe for conditional import from https://docs.python.org/3/library/importlib.html#checking-if-a-module-can-be-imported
+_mpsspec = importlib.util.find_spec('mpsbackend')
+
+skip_mpsbackend = ('mpsbackend' not in sys.modules) and (_mpsspec is None)
 
 class TestVarForm(unittest.TestCase):
 
@@ -35,6 +42,7 @@ class TestVarForm(unittest.TestCase):
         self.assertEqual(len(resstrs), execute_parameters['shots'])
         self.assertTrue(all(len(x) == 4 for x in resstrs))
 
+    @unittest.skipIf(skip_mpsbackend, "mpsbackend not found")
     def test_ryrz_mpssimulator(self):
         var_form = VarForm(varform_description=self.varform_description)
         parameters = np.random.uniform(0, np.pi, var_form.num_parameters)

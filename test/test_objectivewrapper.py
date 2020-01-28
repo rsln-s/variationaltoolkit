@@ -4,6 +4,14 @@ from functools import partial
 from variationaltoolkit.objectivewrapper import ObjectiveWrapper
 from variationaltoolkit.objectives import maxcut_obj
 
+import importlib.util
+import sys
+# a recipe for conditional import from https://docs.python.org/3/library/importlib.html#checking-if-a-module-can-be-imported
+_mpsspec = importlib.util.find_spec('mpsbackend')
+
+skip_mpsbackend = ('mpsbackend' not in sys.modules) and (_mpsspec is None)
+
+@unittest.skipIf(skip_mpsbackend, "mpsbackend not found")
 class TestObjectiveWrapper(unittest.TestCase):
 
     def setUp(self):
