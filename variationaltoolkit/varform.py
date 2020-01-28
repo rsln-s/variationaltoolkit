@@ -18,6 +18,7 @@ else:
 
 import qiskit
 import qiskit.aqua.components.variational_forms as qiskit_variational_forms
+from qiskit.aqua.algorithms.adaptive.qaoa.var_form import QAOAVarForm
 from .utils import execute_wrapper, check_and_load_accounts
 
 class VarForm:
@@ -31,7 +32,8 @@ class VarForm:
                                          Must specify name
                                          For hardware-efficient variational forms, 
                                          must match the __init__ of desired variational form.
-                                         For QAOA, must specify p
+                                         For QAOA, must specify p, cost_operator
+                                         optional: mixer_operator
             problem_description (dict) : Specifies the problem (maxcut, modularity, ising). 
                                          Optional for hardware-efficient variational forms.
                                          Must have field 'name'.
@@ -40,13 +42,14 @@ class VarForm:
         if varform_description is None:
             raise ValueError(f"varform_description is required")
     
-        if varform_description['name'] == 'QAOA':
-            raise NotImplementedError('QAOA not supported yet')
-        
-        varform_parameters = {k : v for k,v in varform_description.items() if k != 'name'}
 
         self.num_qubits = varform_description['num_qubits']
-        self.var_form = getattr(qiskit_variational_forms, varform_description['name'])(**varform_parameters)
+        if varform_description['name'] == 'QAOA':
+            varform_parameters = {k : v for k,v in varform_description.items() if k != 'name' and k != 'num_qubits'}
+            self.var_form = QAOAVarForm(**varform_parameters)
+        else:
+            varform_parameters = {k : v for k,v in varform_description.items() if k != 'name'}
+            self.var_form = getattr(qiskit_variational_forms, varform_description['name'])(**varform_parameters)
         self.num_parameters = self.var_form._num_parameters
 
         self.varform_description = varform_description
