@@ -108,6 +108,21 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         self.assertTrue(np.array_equal(res[1], np.array([1,0,0,1])) or np.array_equal(res[1], np.array([0,1,1,0])))
         logging.disable(logging.NOTSET)
 
+    def test_maxcut_qaoa_sv(self):
+        import logging; logging.disable(logging.CRITICAL)
+        C, _ = get_maxcut_operator(self.w)
+        varopt = VariationalQuantumOptimizer(
+                self.obj, 
+                'COBYLA', 
+                optimizer_parameters=self.optimizer_parameters, 
+                varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4}, 
+                backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
+                execute_parameters=self.execute_parameters)
+        varopt.optimize()
+        res = varopt.get_optimal_solution()
+        self.assertEqual(res[0], -4)
+        self.assertTrue(np.array_equal(res[1], np.array([1,0,0,1])) or np.array_equal(res[1], np.array([0,1,1,0])))
+        logging.disable(logging.NOTSET)
         
 if __name__ == '__main__':
     unittest.main()

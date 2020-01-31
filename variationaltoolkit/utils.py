@@ -46,3 +46,19 @@ def allclose_periodical(x, y, a, b, atol=1e-10):
     x_p = np.remainder(x-a,period) # now in 0, b-a
     y_p = np.remainder(y-a,period)
     return all(np.isclose(x_p[i], y_p[i], atol=atol) or np.isclose(x_p[i], y_p[i]+period, atol=atol) or np.isclose(x_p[i], y_p[i]-period, atol=atol) for i in range(len(x_p)))
+
+def state_to_ampl_counts(vec, eps=1e-15):
+    """Converts a statevector to a dictionary
+    of bitstrings and corresponding amplitudes
+    """
+    qubit_dims = np.log2(vec.shape[0])
+    if qubit_dims % 1:
+        raise ValueError("Input vector is not a valid statevector for qubits.")
+    qubit_dims = int(qubit_dims)
+    counts = {}
+    str_format = '0{}b'.format(qubit_dims)
+    for kk in range(vec.shape[0]):
+        val = vec[kk]
+        if val.real**2+val.imag**2 > eps:
+            counts[format(kk, str_format)] = val
+    return counts

@@ -79,20 +79,25 @@ class VarForm:
             backend = MPSSimulator()
 
         circuit = self.var_form.construct_circuit(parameters)
-        if not circuit.cregs:
-            c = qiskit.ClassicalRegister(self.num_qubits, name='c')
-            circuit.add_register(c)
 
-        circuit.measure(circuit.qregs[0], circuit.cregs[0])
+        if 'statevector' not in backend_description['name']:
+            if not circuit.cregs:
+                c = qiskit.ClassicalRegister(self.num_qubits, name='c')
+                circuit.add_register(c)
+
+            circuit.measure(circuit.qregs[0], circuit.cregs[0])
 
         job = execute_wrapper(circuit, backend, **execute_parameters)
         result = job.result()
 
-        if hasattr(result, 'get_resstrs'):
-            return result.get_resstrs()
+        if 'statevector' in backend_description['name']:
+            return result.get_statevector()
         else:
-            resstrs = []
-            for k, v in result.get_counts().items():
-                for _ in range(v):
-                    resstrs.append(np.array([int(x) for x in k]))
-            return resstrs
+            if hasattr(result, 'get_resstrs'):
+                return result.get_resstrs()
+            else:
+                resstrs = []
+                for k, v in result.get_counts().items():
+                    for _ in range(v):
+                        resstrs.append(np.array([int(x) for x in k]))
+                return resstrs

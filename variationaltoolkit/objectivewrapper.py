@@ -1,7 +1,7 @@
 import numpy as np
 import logging
 from .varform import VarForm
-from .utils import validate_objective, contains_and_raised
+from .utils import validate_objective, contains_and_raised, state_to_ampl_counts
 
 class ObjectiveWrapper:
     """Objective Function Wrapper
@@ -51,15 +51,21 @@ class ObjectiveWrapper:
         def f(theta):
             self.points.append(theta)
             resstrs = self.var_form.run(theta, backend_description=self.backend_description, execute_parameters=self.execute_parameters)
-            if contains_and_raised(self.objective_parameters, 'save_resstrs'):
-                self.resstrs.append(resstrs)
+            if 'statevector' in self.backend_description['name']:
+                sv = resstrs
+                counts = state_to_ampl_counts(sv)
+                assert(np.isclose(sum(np.abs(v)**2 for v in counts.values()), 1))
+                objective_value = sum(self.obj(np.array([int(x) for x in k])) * (np.abs(v)**2) for k, v in counts.items())
+            else:
+                if contains_and_raised(self.objective_parameters, 'save_resstrs'):
+                    self.resstrs.append(resstrs)
 
-            vals = [self.obj(x) for x in resstrs] 
-            if contains_and_raised(self.objective_parameters, 'save_vals'):
-                self.vals.append(vals)
+                vals = [self.obj(x) for x in resstrs] 
+                if contains_and_raised(self.objective_parameters, 'save_vals'):
+                    self.vals.append(vals)
 
-            # TODO: should allow for different statistics (e.g. CVAR)
-            objective_value = np.mean(vals) 
+                # TODO: should allow for different statistics (e.g. CVAR)
+                objective_value = np.mean(vals) 
             logging.info(f"called at step {len(self.vals_statistic)}, objective: {objective_value} at point {theta}")
             self.vals_statistic.append(objective_value)
 
