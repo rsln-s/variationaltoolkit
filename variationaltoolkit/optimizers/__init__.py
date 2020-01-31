@@ -1,3 +1,4 @@
 from .sequentialoptimizer import SequentialOptimizer
+from .bobyqa_nlopt import BOBYQA
 
-__all__ = ['SequentialOptimizer']
+__all__ = ['SequentialOptimizer', 'BOBYQA']
