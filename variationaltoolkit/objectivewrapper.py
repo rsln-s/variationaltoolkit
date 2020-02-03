@@ -51,7 +51,7 @@ class ObjectiveWrapper:
         def f(theta):
             self.points.append(theta)
             resstrs = self.var_form.run(theta, backend_description=self.backend_description, execute_parameters=self.execute_parameters)
-            if 'statevector' in self.backend_description['name']:
+            if self.backend_description['package'] == 'qiskit' and 'statevector' in self.backend_description['name']:
                 sv = resstrs
                 counts = state_to_ampl_counts(sv)
                 assert(np.isclose(sum(np.abs(v)**2 for v in counts.values()), 1))

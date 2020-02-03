@@ -80,7 +80,7 @@ class VarForm:
 
         circuit = self.var_form.construct_circuit(parameters)
 
-        if 'statevector' not in backend_description['name']:
+        if backend_description['package'] == 'qiskit' and 'statevector' not in backend_description['name']:
             if not circuit.cregs:
                 c = qiskit.ClassicalRegister(self.num_qubits, name='c')
                 circuit.add_register(c)
@@ -90,7 +90,7 @@ class VarForm:
         job = execute_wrapper(circuit, backend, **execute_parameters)
         result = job.result()
 
-        if 'statevector' in backend_description['name']:
+        if backend_description['package'] == 'qiskit' and 'statevector' in backend_description['name']:
             return result.get_statevector()
         else:
             if hasattr(result, 'get_resstrs'):

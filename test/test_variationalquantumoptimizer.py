@@ -94,13 +94,14 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
     
     def test_maxcut_qaoa(self):
         import logging; logging.disable(logging.CRITICAL)
-        C, _ = get_maxcut_operator(self.w)
+        C, offset = get_maxcut_operator(self.w)
         varopt = VariationalQuantumOptimizer(
                 self.obj, 
                 'COBYLA', 
                 optimizer_parameters=self.optimizer_parameters, 
                 varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4}, 
                 backend_description={'package':'qiskit', 'provider':'Aer', 'name':'qasm_simulator'}, 
+                problem_description={'offset': offset},
                 execute_parameters=self.execute_parameters)
         varopt.optimize()
         res = varopt.get_optimal_solution()
@@ -110,13 +111,14 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
 
     def test_maxcut_qaoa_sv(self):
         import logging; logging.disable(logging.CRITICAL)
-        C, _ = get_maxcut_operator(self.w)
+        C, offset = get_maxcut_operator(self.w)
         varopt = VariationalQuantumOptimizer(
                 self.obj, 
                 'COBYLA', 
                 optimizer_parameters=self.optimizer_parameters, 
                 varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4}, 
                 backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
+                problem_description={'offset': offset},
                 execute_parameters=self.execute_parameters)
         varopt.optimize()
         res = varopt.get_optimal_solution()

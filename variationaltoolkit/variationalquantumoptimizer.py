@@ -4,7 +4,7 @@ from operator import itemgetter
 import variationaltoolkit.optimizers as vt_optimizers
 import qiskit.aqua.components.optimizers as qiskit_optimizers
 from .objectivewrapper import ObjectiveWrapper
-from .utils import state_to_ampl_counts
+from .utils import state_to_ampl_counts, check_cost_operator
 
 class VariationalQuantumOptimizer:
     def __init__(self, obj, optimizer_name, initial_point=None, variable_bounds=None, optimizer_parameters=None, objective_parameters=None, varform_description=None, backend_description=None, problem_description=None, execute_parameters=None):
@@ -27,6 +27,12 @@ class VariationalQuantumOptimizer:
             objective_parameters (dict) : See objectivewrapper.py 
         """
         self.obj = obj
+        if varform_description['name'] == 'QAOA':
+            if 'offset' in problem_description:
+                offset=problem_description['offset']
+            else:
+                offset=0
+            check_cost_operator(varform_description['cost_operator'], obj, offset=offset)
         self.obj_w = ObjectiveWrapper(obj, objective_parameters=objective_parameters, varform_description=varform_description, backend_description=backend_description, problem_description=problem_description, execute_parameters=execute_parameters)
 
         self.optimizer_name = optimizer_name
@@ -77,7 +83,7 @@ class VariationalQuantumOptimizer:
         Returns minimal(!!) energy string
         """
         final_execute_parameters = copy.deepcopy(self.execute_parameters)
-        if 'statevector' in self.backend_description['name']:
+        if self.backend_description['package'] == 'qiskit' and 'statevector' in self.backend_description['name']:
             sv = self.obj_w.var_form.run(self.res['opt_params'], backend_description=self.backend_description, execute_parameters=final_execute_parameters)
             counts = state_to_ampl_counts(sv)
             assert(np.isclose(sum(np.abs(v)**2 for v in counts.values()), 1))

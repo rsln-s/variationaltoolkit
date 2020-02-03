@@ -3,6 +3,9 @@ import numpy as np
 from qiskit import IBMQ
 from qiskit import execute as qiskit_execute
 from qiskit.providers.aer.backends.aerbackend import AerBackend
+from qiskit.aqua.operators.op_converter import to_matrix_operator
+
+from .endianness import get_adjusted_state
 
 def check_and_load_accounts():
     if IBMQ.active_account() is None:
@@ -62,3 +65,45 @@ def state_to_ampl_counts(vec, eps=1e-15):
         if val.real**2+val.imag**2 > eps:
             counts[format(kk, str_format)] = val
     return counts
+
+
+def all_two_qubit_gates(qc):
+    """
+    Returns a list of the directions of all two-qubit gates (control, target)
+    """
+    res = []
+    for g in qc:
+        if len(g[1]) == 2:
+            res.append((g[1][0].index, g[1][1].index))
+    return res
+
+
+def cost_operator_to_vec(C, offset=0):
+    """Takes Qiskit WeightedPauliOperator
+    representing the NxN cost Hamiltonian and converts
+    it into a vector of length N of just the diagonal 
+    elements. Verifies that C is real and diagonal.
+    """
+    C_mat = to_matrix_operator(C)
+    m = C_mat.dense_matrix
+    m_diag = np.zeros(m.shape[0])
+    assert(m.shape[0] == m.shape[1])
+    for i in range(m.shape[0]):
+        for j in range(m.shape[1]):
+            if i != j:
+                assert(np.real(m[i][j]) == 0 and np.imag(m[i][j]) == 0)
+            else:
+                assert(np.imag(m[i][j]) == 0)
+                m_diag[i] = np.real(m[i][j])
+    return m_diag+offset
+    
+
+def check_cost_operator(C, obj_f, offset=0):
+    """ Cost operator should be diagonal
+    with the cost of state i as i-th element
+    """
+    m_diag = cost_operator_to_vec(C, offset=offset)
+    m_diag = np.real(get_adjusted_state(m_diag))
+    for k, v in state_to_ampl_counts(m_diag, eps=-1).items():
+        x = np.array([int(_k) for _k in k])
+        assert(np.isclose(obj_f(x), v))
