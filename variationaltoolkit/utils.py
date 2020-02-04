@@ -98,6 +98,13 @@ def cost_operator_to_vec(C, offset=0):
     return m_diag+offset
     
 
+def obj_from_statevector(sv, obj_f):
+    adj_sv = get_adjusted_state(sv)
+    counts = state_to_ampl_counts(adj_sv)
+    assert(np.isclose(sum(np.abs(v)**2 for v in counts.values()), 1))
+    return sum(obj_f(np.array([int(x) for x in k])) * (np.abs(v)**2) for k, v in counts.items())
+
+
 def check_cost_operator(C, obj_f, offset=0):
     """ Cost operator should be diagonal
     with the cost of state i as i-th element
