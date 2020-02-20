@@ -11,7 +11,7 @@ import socket
 
 from libensemble.libE import libE
 from libensemble.gen_funcs.persistent_aposmm import aposmm as gen_f
-from libensemble.alloc_funcs.fast_alloc_to_aposmm import give_sim_work_first as alloc_f
+from libensemble.alloc_funcs.persistent_aposmm_alloc import persistent_aposmm_alloc as alloc_f
 
 import numpy as np
 import networkx as nx
@@ -59,23 +59,18 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None, sample
     # State the generating function, its arguments, output, and necessary parameters.
     gen_specs = {
         'gen_f': gen_f,
-        'in': [o[0] for o in gen_out] + ['f', 'returned'],
+        'in': ['x', 'f', 'local_pt', 'sim_id', 'returned', 'x_on_cube', 'local_min'],
         #'mu':0.1,   # limit on dist_to_bound: everything closer to bound than mu is thrown out
         'out': gen_out,
         'user':{
             'lb': lb,
             'ub': ub,
-            'initial_sample_size': MPI.COMM_WORLD.Get_size(),  # num points sampled before starting opt runs, one per worker
+            'initial_sample_size': 20,  # num points sampled before starting opt runs, one per worker
             'localopt_method': 'LN_NEWUOA',
             'xtol_rel': 1e-5, 
-            'tol': 1e-5,  # for scipy only
             'ftol_rel': 1e-6,
-            'min_batch_size': 1,
-            'batch_mode': True,
-            'num_active_gens': 1,
             'sample_points': sample_points,
             'periodic': True,
-            'high_priority_to_best_localopt_runs': True
         }
     }
 
@@ -96,7 +91,7 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None, sample
     for i in range(1, MPI.COMM_WORLD.Get_size()):
         persis_info[i] = {'rand_stream': np.random.RandomState()}
 
-    alloc_specs = {'out': [('allocated', bool)], 'alloc_f': alloc_f, 'user':{'batch_mode': True}}
+    alloc_specs = {'alloc_f': alloc_f, 'out': [('given_back', bool)], 'user': {}}
 
     H, persis_info, flag = libE(
         sim_specs,
