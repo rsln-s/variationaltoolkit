@@ -10,7 +10,7 @@ import numpy as np
 import socket
 
 from libensemble.libE import libE
-from libensemble.gen_funcs.aposmm import aposmm_logic
+from libensemble.gen_funcs.persistent_aposmm import aposmm as gen_f
 from libensemble.alloc_funcs.fast_alloc_to_aposmm import give_sim_work_first as alloc_f
 
 import numpy as np
@@ -52,24 +52,13 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None, sample
         ('x', float, num_parameters),
         ('x_on_cube', float, num_parameters),
         ('sim_id', int),
-        ('priority', float),
         ('local_pt', bool),
-        ('known_to_aposmm',
-         bool),  # Mark known points so fewer updates are needed.
-        ('dist_to_unit_bounds', float),
-        ('dist_to_better_l', float),
-        ('dist_to_better_s', float),
-        ('ind_of_better_l', int),
-        ('ind_of_better_s', int),
-        ('started_run', bool),
-        ('num_active_runs', int),  # Number of active runs point is involved in
         ('local_min', bool),
-        ('paused', bool),
-    ]
+  ]
 
     # State the generating function, its arguments, output, and necessary parameters.
     gen_specs = {
-        'gen_f': aposmm_logic,
+        'gen_f': gen_f,
         'in': [o[0] for o in gen_out] + ['f', 'returned'],
         #'mu':0.1,   # limit on dist_to_bound: everything closer to bound than mu is thrown out
         'out': gen_out,
@@ -77,7 +66,7 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None, sample
             'lb': lb,
             'ub': ub,
             'initial_sample_size': MPI.COMM_WORLD.Get_size(),  # num points sampled before starting opt runs, one per worker
-            'localopt_method': 'scipy_COBYLA',
+            'localopt_method': 'LN_NEWUOA',
             'xtol_rel': 1e-5, 
             'tol': 1e-5,  # for scipy only
             'ftol_rel': 1e-6,
@@ -85,6 +74,7 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None, sample
             'batch_mode': True,
             'num_active_gens': 1,
             'sample_points': sample_points,
+            'periodic': True,
             'high_priority_to_best_localopt_runs': True
         }
     }
