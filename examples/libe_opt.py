@@ -33,8 +33,7 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None, sample
         for i, x in enumerate(H['x']):
             O['f'][i] = obj_val(x)
 
-        print(O)
-        sys.stdout.flush()
+        print(O, flush=True)
         return O, gen_info
 
     script_name = os.path.splitext(os.path.basename(__file__))[0]
