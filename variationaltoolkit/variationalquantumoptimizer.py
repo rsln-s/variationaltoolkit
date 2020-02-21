@@ -4,7 +4,8 @@ from operator import itemgetter
 import variationaltoolkit.optimizers as vt_optimizers
 import qiskit.aqua.components.optimizers as qiskit_optimizers
 from .objectivewrapper import ObjectiveWrapper
-from .utils import state_to_ampl_counts, check_cost_operator, get_adjusted_state
+from .objectivewrappersmooth import ObjectiveWrapperSmooth
+from .utils import state_to_ampl_counts, check_cost_operator, get_adjusted_state, contains_and_raised
 
 class VariationalQuantumOptimizer:
     def __init__(self, obj, optimizer_name, initial_point=None, variable_bounds=None, optimizer_parameters=None, objective_parameters=None, varform_description=None, backend_description=None, problem_description=None, execute_parameters=None):
@@ -33,7 +34,10 @@ class VariationalQuantumOptimizer:
             else:
                 offset=0
             check_cost_operator(varform_description['cost_operator'], obj, offset=offset)
-        self.obj_w = ObjectiveWrapper(obj, objective_parameters=objective_parameters, varform_description=varform_description, backend_description=backend_description, problem_description=problem_description, execute_parameters=execute_parameters)
+        if contains_and_raised(varform_description, 'smooth_schedule'):
+            self.obj_w = ObjectiveWrapperSmooth(obj, objective_parameters=objective_parameters, varform_description=varform_description, backend_description=backend_description, problem_description=problem_description, execute_parameters=execute_parameters)
+        else:
+            self.obj_w = ObjectiveWrapper(obj, objective_parameters=objective_parameters, varform_description=varform_description, backend_description=backend_description, problem_description=problem_description, execute_parameters=execute_parameters)
 
         self.optimizer_name = optimizer_name
         self.optimizer_parameters = optimizer_parameters
