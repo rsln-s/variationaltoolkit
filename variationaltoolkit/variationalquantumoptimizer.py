@@ -50,13 +50,13 @@ class VariationalQuantumOptimizer:
         if variable_bounds is not None:
             self.variable_bounds = variable_bounds
         else:
-            self.variable_bounds = [(None, None)] * self.obj_w.var_form.num_parameters 
+            self.variable_bounds = [(None, None)] * self.obj_w.num_parameters 
         if initial_point is not None:
             self.initial_point=initial_point
         else:
             lb = [(l if l is not None else -2 * np.pi) for (l, u) in self.variable_bounds]
             ub = [(u if u is not None else 2 * np.pi) for (l, u) in self.variable_bounds]
-            self.initial_point = np.random.uniform(lb,ub, self.obj_w.var_form.num_parameters)
+            self.initial_point = np.random.uniform(lb,ub, self.obj_w.num_parameters)
         self.varform_description = varform_description
         self.problem_description = problem_description
         self.execute_parameters = execute_parameters
@@ -67,7 +67,7 @@ class VariationalQuantumOptimizer:
     def optimize(self):
         """Minimize the objective
         """
-        opt_params, opt_val, num_optimizer_evals = self.optimizer.optimize(self.obj_w.var_form.num_parameters, 
+        opt_params, opt_val, num_optimizer_evals = self.optimizer.optimize(self.obj_w.num_parameters, 
                                                                       self.obj_w.get_obj(), 
                                                                       variable_bounds = self.variable_bounds,
                                                                       initial_point = self.initial_point)

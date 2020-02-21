@@ -39,6 +39,8 @@ class ObjectiveWrapper:
             self.var_form = getattr(mps_variational_forms, varform_description['name'])(**varform_parameters)
         else:
             self.var_form = VarForm(varform_description=varform_description, problem_description=problem_description)
+        self.num_parameters = self.var_form.num_parameters
+        del self.var_form.num_parameters
         self.vals_statistic = []
         self.vals = []
         self.points = []
