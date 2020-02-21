@@ -20,7 +20,8 @@ import argparse
 from functools import partial
 from variationaltoolkit import ObjectiveWrapper
 from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
-
+from libensemble.utils import parse_args
+nworkers, _, _, _ = parse_args()
 
 def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None, sample_points=[]):
 
@@ -69,6 +70,7 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None, sample
             'xtol_rel': 1e-5, 
             'ftol_rel': 1e-6,
             'sample_points': sample_points,
+            'num_pts_first_pass': nworkers-1,
             'periodic': True,
         }
     }
