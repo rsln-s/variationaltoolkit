@@ -3,6 +3,8 @@ import logging
 from .objectivewrapper import ObjectiveWrapper
 from .utils import contains_and_raised, state_to_ampl_counts, obj_from_statevector
 
+logger = logging.getLogger(__name__)
+
 class ObjectiveWrapperSmooth(ObjectiveWrapper):
     """A class to wrap smooth QAOA schedules
 
@@ -43,7 +45,7 @@ class ObjectiveWrapperSmooth(ObjectiveWrapper):
 
                 # TODO: should allow for different statistics (e.g. CVAR)
                 objective_value = np.mean(vals) 
-            logging.info(f"called at step {len(self.vals_statistic)}, objective: {objective_value} at point {theta}")
+            logger.info(f"called at step {len(self.vals_statistic)}, objective: {objective_value} at point {theta}")
             self.vals_statistic.append(objective_value)
 
             return objective_value
