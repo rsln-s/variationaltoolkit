@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import logging
 from qiskit import IBMQ
 from qiskit import execute as qiskit_execute
 from qiskit.providers.aer.backends.aerbackend import AerBackend
@@ -7,13 +8,15 @@ from qiskit.aqua.operators.op_converter import to_matrix_operator
 
 from .endianness import get_adjusted_state
 
+logger = logging.getLogger(__name__)
+
 def check_and_load_accounts():
     if IBMQ.active_account() is None:
         # try loading account
         IBMQ.load_account()
         if IBMQ.active_account() is None:
             # try grabbing token from environment
-            logging.debug("Using token: {}".format(os.environ['QE_TOKEN']))
+            logger.debug("Using token: {}".format(os.environ['QE_TOKEN']))
             IBMQ.enable_account(os.environ['QE_TOKEN'])
 
 def execute_wrapper(experiments, backend, **kwargs):
@@ -114,3 +117,14 @@ def check_cost_operator(C, obj_f, offset=0):
     for k, v in state_to_ampl_counts(m_diag, eps=-1).items():
         x = np.array([int(_k) for _k in k])
         assert(np.isclose(obj_f(x), v))
+
+
+def brute_force(obj_f, num_variables):
+    best_cost_brute = 0
+    for b in range(2**num_variables):
+        x = [int(t) for t in reversed(list(bin(b)[2:].zfill(num_variables)))]
+        cost = obj_f(x)
+        if cost < best_cost_brute:
+            best_cost_brute = cost
+            xbest_brute = x
+    return best_cost_brute, xbest_brute

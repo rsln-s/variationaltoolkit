@@ -3,6 +3,8 @@ import logging
 from .varform import VarForm
 from .utils import validate_objective, contains_and_raised, state_to_ampl_counts, obj_from_statevector
 
+logger = logging.getLogger(__name__)
+
 class ObjectiveWrapper:
     """Objective Function Wrapper
     
@@ -39,6 +41,8 @@ class ObjectiveWrapper:
             self.var_form = getattr(mps_variational_forms, varform_description['name'])(**varform_parameters)
         else:
             self.var_form = VarForm(varform_description=varform_description, problem_description=problem_description)
+        self.num_parameters = self.var_form.num_parameters
+        del self.var_form.num_parameters
         self.vals_statistic = []
         self.vals = []
         self.points = []
@@ -63,7 +67,7 @@ class ObjectiveWrapper:
 
                 # TODO: should allow for different statistics (e.g. CVAR)
                 objective_value = np.mean(vals) 
-            logging.info(f"called at step {len(self.vals_statistic)}, objective: {objective_value} at point {theta}")
+            logger.info(f"called at step {len(self.vals_statistic)}, objective: {objective_value} at point {theta}")
             self.vals_statistic.append(objective_value)
 
             return objective_value
