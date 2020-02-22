@@ -159,7 +159,8 @@ if __name__ == '__main__':
     ub_init = np.array([np.pi / 2] * (args.p * args.maxiter) + [np.pi] * (args.p * args.maxiter))
     ub = np.array([999, 999] * args.p)
 
-    sample_points = np.split(np.random.uniform(lb_init, ub_init, 2 * args.p * args.maxiter), args.maxiter)
+    #sample_points = np.split(np.random.uniform(lb_init, ub_init, 2 * args.p * args.maxiter), args.maxiter)
+    sample_points = [np.hstack([np.linspace(0.95579897, 1.56701708, 15), np.linspace(0.11911403, 1.30255566, 15)])] * 20
 
 
     obj_w = ObjectiveWrapper(
@@ -168,9 +169,9 @@ if __name__ == '__main__':
             backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'},
             execute_parameters={})
 
-    assert(obj_w.var_form.num_parameters == 2*args.p)
+    assert(obj_w.num_parameters == 2*args.p)
 
-    t = optimize_obj(obj_w.get_obj(), obj_w.var_form.num_parameters, ub=ub, lb=lb, sim_max=args.maxiter, sample_points=sample_points)
+    t = optimize_obj(obj_w.get_obj(), obj_w.num_parameters, ub=ub, lb=lb, sim_max=args.maxiter, sample_points=sample_points)
 
     if MPI.COMM_WORLD.Get_rank() == 0:
         #outpath = f"/zfs/safrolab/users/rshaydu/quantum/data/nasa_2020/libe_optimized_schedules/n_{args.nnodes}_p_{args.p}_gseed_{args.graph_generator_seed}.p"
