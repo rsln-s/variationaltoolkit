@@ -127,4 +127,4 @@ def brute_force(obj_f, num_variables):
         if cost < best_cost_brute:
             best_cost_brute = cost
             xbest_brute = x
-    print(best_cost_brute, xbest_brute)
+    return best_cost_brute, xbest_brute
