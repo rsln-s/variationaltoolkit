@@ -3,7 +3,7 @@
 This is a set of tools that wrap up variational forms for optimization and more.
 
 
-## Package Vverview
+## Package Overview
 ![Flowchart](/images/HighLevelVariationalToolkit.png)
 
 See tests for examples of how to use each part of the package. An in-depth flowchart documenting each function and the interactions can be found in images/VariationalToolkit.png
@@ -25,9 +25,9 @@ pip install -e .
 
 ## Optional Requirements
 
-mpsbackend
+mpsbackend (private, access by request)
 
-### Using with Jupyter notebooks
+## Using with Jupyter notebooks
 
 ```
 conda install jupyter
