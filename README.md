@@ -33,3 +33,10 @@ from https://www.palmetto.clemson.edu/palmetto/jupyterhub_add_kernel.html
 We use Python unittest for tests. To run tests, run `python -m unittest` in the project root.
 
 In general, if you are adding a test for method `foo` implemented in `variationaltoolkit/bar/blah.py`, the test should be in `test/bar/test_blah.py` and have name `test_foo`. Consult existing tests for examples.
+
+## Flowchart
+![Flowchart](/images/HighLevelVariationalToolkit.png)
+
+An in-depth flowchart documenting each function and the interactions can be found in images/VariationalToolkit.png
+
+The flowchart can be edited within draw.io. The source can be found at https://drive.google.com/file/d/16l2bXQnwfoDn0K8B0lD2cfmAXarktajm/view?usp=sharing
