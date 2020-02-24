@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 import networkx as nx
+import time
 from functools import partial
 from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
 from variationaltoolkit.objectives import maxcut_obj, modularity_obj
@@ -19,7 +20,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         self.varform_description = {'name':'RYRZ', 'num_qubits':4, 'depth':3}
         self.backend_description={'package':'mpsbackend'}
         self.execute_parameters={'shots':1000}
-        self.optimizer_parameters={'maxiter':50, 'disp':True}
+        self.optimizer_parameters={'maxiter':50}
         self.w = np.array([[0,1,1,0],[1,0,1,1],[1,1,0,1],[0,1,1,0]])
         self.obj = partial(maxcut_obj, w=self.w) 
 
@@ -143,22 +144,23 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         logging.disable(logging.NOTSET)
         
     def test_maxcut_qaoa_large(self):
-        G = nx.random_regular_graph(3, 18, seed=1)
+        G = nx.random_regular_graph(3, 20, seed=1)
         w = nx.adjacency_matrix(G, nodelist=range(G.number_of_nodes()))
         obj = partial(maxcut_obj, w=w)
         C, offset = get_maxcut_operator(w)
+        start = time.time()
         varopt = VariationalQuantumOptimizer(
                 obj, 
                 'COBYLA', 
                 initial_point=np.zeros(4),
                 optimizer_parameters={'maxiter':1, 'disp':True}, 
                 varform_description={'name':'QAOA', 'p':1, 'cost_operator':C, 'num_qubits':G.number_of_nodes(), 'smooth_schedule':True}, 
-                backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
+                backend_description={'package':'qiskit', 'provider':'Aer', 'name':'qasm_simulator'}, 
                 problem_description={'offset': offset, 'do_not_check_cost_operator':True},
-                #problem_description={'offset': offset},
                 execute_parameters=self.execute_parameters)
         res = varopt.optimize()
-        print(res)
+        end = time.time()
+        self.assertTrue(end-start < 1)
         
 if __name__ == '__main__':
     unittest.main()

@@ -28,7 +28,8 @@ class ObjectiveWrapper:
                                            'save_resstrs' (bool) -- save all raw resstrs
         """
         validate_objective(obj, varform_description['num_qubits'])
-
+        if backend_description['package'] == 'qiskit' and 'statevector' in backend_description['name'] and varform_description['num_qubits'] > 10:
+            logger.warning(f"obj_from_statevector used with statevector simulator is slow for large number of qubits\nUse qasm_simulator instead.")
         self.obj = obj
         self.varform_description = varform_description
         self.problem_description = problem_description
