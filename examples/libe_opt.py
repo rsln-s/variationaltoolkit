@@ -23,7 +23,7 @@ from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operato
 from libensemble.utils import parse_args
 nworkers, _, _, _ = parse_args()
 
-def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None, sample_points=[]):
+def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
 
     def sim_func(H, gen_info, sim_specs, libE_info):
         del libE_info  # Ignored parameter
@@ -66,10 +66,9 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None, sample
             'lb': lb,
             'ub': ub,
             'initial_sample_size': 20,  # num points sampled before starting opt runs, one per worker
-            'localopt_method': 'LN_NEWUOA',
-            'xtol_rel': 1e-5, 
-            'ftol_rel': 1e-6,
-            'sample_points': sample_points,
+            'localopt_method': 'scipy_COBYLA',
+            'xatol':1e-10,
+            'fatol':1e-10,
             'num_pts_first_pass': nworkers-1,
             'periodic': True,
         }
@@ -153,15 +152,11 @@ if __name__ == '__main__':
     obj_f_cut = partial(maxcut_obj, G=G)
     C, _ = get_maxcut_operator(w)
 
-    # using different bounds for initial points and the full optimization because COBYLA is shit at periodic bounds
-    lb_init = np.array([0, 0] * (args.p * args.maxiter))
-    lb = np.array([-999, -999] * args.p)
-    ub_init = np.array([np.pi / 2] * (args.p * args.maxiter) + [np.pi] * (args.p * args.maxiter))
-    ub = np.array([999, 999] * args.p)
+    #lb = np.array([0, 0] * args.p)
+    #ub = np.array([np.pi / 2] * args.p + [np.pi] * args.p)
 
-    #sample_points = np.split(np.random.uniform(lb_init, ub_init, 2 * args.p * args.maxiter), args.maxiter)
-    sample_points = [np.hstack([np.linspace(0.95579897, 1.56701708, 15), np.linspace(0.11911403, 1.30255566, 15)])] * 20
-
+    lb = np.array([-np.inf, -np.inf] * args.p)
+    ub = np.array([np.inf, np.inf] * args.p)
 
     obj_w = ObjectiveWrapper(
             obj_f_cut, 
@@ -171,11 +166,11 @@ if __name__ == '__main__':
 
     assert(obj_w.num_parameters == 2*args.p)
 
-    t = optimize_obj(obj_w.get_obj(), obj_w.num_parameters, ub=ub, lb=lb, sim_max=args.maxiter, sample_points=sample_points)
+    t = optimize_obj(obj_w.get_obj(), obj_w.num_parameters, ub=ub, lb=lb, sim_max=args.maxiter)
 
     if MPI.COMM_WORLD.Get_rank() == 0:
         #outpath = f"/zfs/safrolab/users/rshaydu/quantum/data/nasa_2020/libe_optimized_schedules/n_{args.nnodes}_p_{args.p}_gseed_{args.graph_generator_seed}.p"
         outpath = f"/zfs/safrolab/users/rshaydu/quantum/data/nasa_2020/libe_optimized_schedules/petersen_p_{args.p}.p"
-        print(f"Found solution {min(H['f'])}, saving to {outpath}")
+        print(f"Found solution {min(t[0]['f'])}, saving to {outpath}")
         pickle.dump(t, open(outpath, "wb"))
         
