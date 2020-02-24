@@ -142,5 +142,23 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         self.assertTrue(res['min_val'] < -3.5)
         logging.disable(logging.NOTSET)
         
+    def test_maxcut_qaoa_large(self):
+        G = nx.random_regular_graph(3, 18, seed=1)
+        w = nx.adjacency_matrix(G, nodelist=range(G.number_of_nodes()))
+        obj = partial(maxcut_obj, w=w)
+        C, offset = get_maxcut_operator(w)
+        varopt = VariationalQuantumOptimizer(
+                obj, 
+                'COBYLA', 
+                initial_point=np.zeros(4),
+                optimizer_parameters={'maxiter':1, 'disp':True}, 
+                varform_description={'name':'QAOA', 'p':1, 'cost_operator':C, 'num_qubits':G.number_of_nodes(), 'smooth_schedule':True}, 
+                backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
+                problem_description={'offset': offset, 'do_not_check_cost_operator':True},
+                #problem_description={'offset': offset},
+                execute_parameters=self.execute_parameters)
+        res = varopt.optimize()
+        print(res)
+        
 if __name__ == '__main__':
     unittest.main()
