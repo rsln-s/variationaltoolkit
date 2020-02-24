@@ -2,6 +2,14 @@
 
 This is a set of tools that wrap up variational forms for optimization and more.
 
+
+## Package Overview
+![Flowchart](/images/HighLevelVariationalToolkit.png)
+
+See tests for examples of how to use each part of the package. An in-depth flowchart documenting each function and the interactions can be found in images/VariationalToolkit.png
+
+The flowchart can be edited within draw.io. The source can be found at https://drive.google.com/file/d/16l2bXQnwfoDn0K8B0lD2cfmAXarktajm/view?usp=sharin
+
 ## Installation
 
 ```
@@ -17,9 +25,9 @@ pip install -e .
 
 ## Optional Requirements
 
-mpsbackend
+mpsbackend (private, access by request)
 
-### Using with Jupyter notebooks
+## Using with Jupyter notebooks
 
 ```
 conda install jupyter
