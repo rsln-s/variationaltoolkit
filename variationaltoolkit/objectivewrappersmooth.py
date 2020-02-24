@@ -14,7 +14,6 @@ class ObjectiveWrapperSmooth(ObjectiveWrapper):
     def __init__(self, *args, **kwargs):
         if kwargs['varform_description']['name'] != 'QAOA':
             raise ValueError(f"Smooth schedules are only support for QAOA varform, received {varform_description['name']}")
-        kwargs['varform_description'].pop('smooth_schedule') # kinda hacky
         super().__init__(*args, **kwargs)
         self.num_parameters = 4 
         self.p = self.varform_description['p']

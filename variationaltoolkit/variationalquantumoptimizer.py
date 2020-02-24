@@ -25,7 +25,9 @@ class VariationalQuantumOptimizer:
                                           Transarently passed to qiskit aqua optimizers.
                                           See docs for corresponding optimizer.
             varform_description (dict)  : See varform.py
-            problem_description (dict)  : See varform.py 
+            problem_description (dict)  : 'offset': difference between the energies of the cost Hamiltonian and true energies of obj (same as in qiskit)
+                                          'do_not_check_cost_operator': does not run check_cost_operator on cost operator, which is slow for large number of qubits. Use with caution! 
+                                          'smooth_schedule' : tries fitting a smooth schedule instead of optimizing directily (see objectivewrappersmooth.py)
             backend_description (dict)  : See varform.py
             execute_parameters (dict)   : See objectivewrapper.py
             objective_parameters (dict) : See objectivewrapper.py 
@@ -40,7 +42,7 @@ class VariationalQuantumOptimizer:
                 if varform_description['cost_operator'].num_qubits >= 10:
                     logger.warning('check_cost_operator requires building full density matrix, prohibitive for high number of qubits \n Recommended to set: problem_description[\'do_not_check_cost_operator\']=True')
                 check_cost_operator(varform_description['cost_operator'], obj, offset=offset)
-        if contains_and_raised(varform_description, 'smooth_schedule'):
+        if contains_and_raised(problem_description, 'smooth_schedule'):
             self.obj_w = ObjectiveWrapperSmooth(obj, objective_parameters=objective_parameters, varform_description=varform_description, backend_description=backend_description, problem_description=problem_description, execute_parameters=execute_parameters)
         else:
             self.obj_w = ObjectiveWrapper(obj, objective_parameters=objective_parameters, varform_description=varform_description, backend_description=backend_description, problem_description=problem_description, execute_parameters=execute_parameters)

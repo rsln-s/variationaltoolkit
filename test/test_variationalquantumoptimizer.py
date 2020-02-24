@@ -135,9 +135,9 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
                 'COBYLA', 
                 initial_point=[np.pi/4, 0, 0, np.pi/2],
                 optimizer_parameters=self.optimizer_parameters, 
-                varform_description={'name':'QAOA', 'p':15, 'cost_operator':C, 'num_qubits':4, 'smooth_schedule':True}, 
+                varform_description={'name':'QAOA', 'p':15, 'cost_operator':C, 'num_qubits':4}, 
                 backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
-                problem_description={'offset': offset},
+                problem_description={'offset': offset, 'smooth_schedule':True},
                 execute_parameters=self.execute_parameters)
         res = varopt.optimize()
         self.assertTrue(res['min_val'] < -3.5)
@@ -152,9 +152,9 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         varopt = VariationalQuantumOptimizer(
                 obj, 
                 'COBYLA', 
-                initial_point=np.zeros(4),
+                initial_point=np.zeros(2),
                 optimizer_parameters={'maxiter':1, 'disp':True}, 
-                varform_description={'name':'QAOA', 'p':1, 'cost_operator':C, 'num_qubits':G.number_of_nodes(), 'smooth_schedule':True}, 
+                varform_description={'name':'QAOA', 'p':1, 'cost_operator':C, 'num_qubits':G.number_of_nodes()}, 
                 backend_description={'package':'qiskit', 'provider':'Aer', 'name':'qasm_simulator'}, 
                 problem_description={'offset': offset, 'do_not_check_cost_operator':True},
                 execute_parameters=self.execute_parameters)
