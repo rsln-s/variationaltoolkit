@@ -70,6 +70,7 @@ class ObjectiveWrapper:
             logger.info(f"called at step {len(self.vals_statistic)}, objective: {objective_value} at point {theta}")
             self.vals_statistic.append(objective_value)
 
+            print('J',objective_value,theta,flush=True)
             return objective_value
 
         return f

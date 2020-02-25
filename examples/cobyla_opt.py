@@ -52,6 +52,7 @@ if __name__ == '__main__':
     lb = np.array([0, 0] * args.p)
     ub = np.array([np.pi / 2] * args.p + [np.pi] * args.p)
 
+    np.random.seed(0)
     init_theta = np.random.uniform(lb, ub)
 
     obj_w = ObjectiveWrapper(

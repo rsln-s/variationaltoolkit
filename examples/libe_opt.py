@@ -34,7 +34,6 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
         for i, x in enumerate(H['x']):
             O['f'][i] = obj_val(x)
 
-        print(O, flush=True)
         return O, gen_info
 
     script_name = os.path.splitext(os.path.basename(__file__))[0]
@@ -56,6 +55,7 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
         ('local_min', bool),
   ]
 
+    np.random.seed(0)
     # State the generating function, its arguments, output, and necessary parameters.
     gen_specs = {
         'gen_f': gen_f,
@@ -65,11 +65,12 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
         'user':{
             'lb': lb,
             'ub': ub,
-            'initial_sample_size': 20,  # num points sampled before starting opt runs, one per worker
+            'initial_sample_size': 1,  # num points sampled before starting opt runs, one per worker
             'localopt_method': 'scipy_COBYLA',
-            'xatol':1e-10,
-            'fatol':1e-10,
+            'sample_points': np.atleast_2d(np.random.uniform(lb, ub)),
+            'scipy_kwargs': {'tol': 1e-10, 'options': {'disp':True, 'maxiter': 300}},
             'num_pts_first_pass': nworkers-1,
+            'max_active_runs': 1,
             'periodic': True,
         }
     }
@@ -116,7 +117,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--maxiter", type = int,
-        default = "100",
+        default = "300",
         help = "number of iterations, default is 100")
     parser.add_argument(
         "--nnodes", type = int,
