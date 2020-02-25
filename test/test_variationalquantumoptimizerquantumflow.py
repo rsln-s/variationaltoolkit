@@ -14,7 +14,7 @@ _mpsspec = importlib.util.find_spec('mpsbackend')
 
 skip_mpsbackend = ('mpsbackend' not in sys.modules) and (_mpsspec is None)
 
-class TestVariationalQuantumOptimizer(unittest.TestCase):
+class TestVariationalQuantumOptimizerQuantumFlow(unittest.TestCase):
 
     def setUp(self):
         self.w = np.array([[0,1,1,0],[1,0,1,1],[1,1,0,1],[0,1,1,0]])
