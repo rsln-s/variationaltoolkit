@@ -1,3 +1,4 @@
 from .varform import VarForm
 from .variationalquantumoptimizer import VariationalQuantumOptimizer
+from .variationalquantumoptimizerquantumflow import VariationalQuantumOptimizerQuantumFlow
 from .objectivewrapper import ObjectiveWrapper
