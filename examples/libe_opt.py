@@ -152,11 +152,11 @@ if __name__ == '__main__':
     obj_f_cut = partial(maxcut_obj, G=G)
     C, _ = get_maxcut_operator(w)
 
-    #lb = np.array([0, 0] * args.p)
-    #ub = np.array([np.pi / 2] * args.p + [np.pi] * args.p)
+    lb = np.array([0, 0] * args.p)
+    ub = np.array([np.pi / 2] * args.p + [np.pi] * args.p)
 
-    lb = np.array([-np.inf, -np.inf] * args.p)
-    ub = np.array([np.inf, np.inf] * args.p)
+    #lb = np.array([-np.inf, -np.inf] * args.p)
+    #ub = np.array([np.inf, np.inf] * args.p)
 
     obj_w = ObjectiveWrapper(
             obj_f_cut, 
