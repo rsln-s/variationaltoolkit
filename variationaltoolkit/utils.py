@@ -1,12 +1,14 @@
 import os
 import numpy as np
 import logging
+from multiprocessing import Pool
+from functools import partial
 from qiskit import IBMQ
 from qiskit import execute as qiskit_execute
 from qiskit.providers.aer.backends.aerbackend import AerBackend
 from qiskit.aqua.operators.op_converter import to_matrix_operator
 
-from .endianness import get_adjusted_state
+from .endianness import get_adjusted_state, state_num2str
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +102,18 @@ def cost_operator_to_vec(C, offset=0):
                 m_diag[i] = np.real(m[i][j])
     return m_diag+offset
     
+
+def pickleable_wrapper_with_parameter_return(x, obj_f=None):
+    return x, obj_f(np.array([int(y) for y in x]))
+
+
+def precompute_obj(obj_f, nqubits, nprocesses=1):
+    obj_f_w = partial(pickleable_wrapper_with_parameter_return, obj_f=obj_f)
+
+    with Pool(nprocesses) as p:
+        bitstrs = [state_num2str(k,nqubits) for k in range(2**nqubits)]
+        return dict(p.map(obj_f_w, bitstrs))
+
 
 def obj_from_statevector(sv, obj_f):
     adj_sv = get_adjusted_state(sv)
