@@ -66,9 +66,10 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
             'lb': lb,
             'ub': ub,
             'initial_sample_size': 1,  # num points sampled before starting opt runs, one per worker
-            'localopt_method': 'scipy_COBYLA',
+            'localopt_method': 'LN_COBYLA',
             'sample_points': np.atleast_2d(np.random.uniform(lb, ub)),
-            'scipy_kwargs': {'tol': 1e-10, 'options': {'disp':True, 'maxiter': 300}},
+            'ftol_rel':1e-10,
+            'xtol_rel':1e-10,
             'num_pts_first_pass': nworkers-1,
             'max_active_runs': 1,
             'periodic': True,
@@ -155,9 +156,6 @@ if __name__ == '__main__':
 
     lb = np.array([0, 0] * args.p)
     ub = np.array([np.pi / 2] * args.p + [np.pi] * args.p)
-
-    #lb = np.array([-np.inf, -np.inf] * args.p)
-    #ub = np.array([np.inf, np.inf] * args.p)
 
     obj_w = ObjectiveWrapper(
             obj_f_cut, 
