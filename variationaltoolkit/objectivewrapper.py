@@ -26,6 +26,7 @@ class ObjectiveWrapper:
                                            'save_vals' (bool) -- save values of the objective function 
                                            Note: statistic on the value of objective function (e.g. mean) is saved automatically
                                            'save_resstrs' (bool) -- save all raw resstrs
+                                           'nprocesses' : number of processes to use for objective function evaluation (only used for statevector_simulator)
         """
         validate_objective(obj, varform_description['num_qubits'])
         if backend_description['package'] == 'qiskit' and 'statevector' in backend_description['name'] and varform_description['num_qubits'] > 10:
@@ -44,6 +45,14 @@ class ObjectiveWrapper:
             self.var_form = VarForm(varform_description=varform_description, problem_description=problem_description)
         self.num_parameters = self.var_form.num_parameters
         del self.var_form.num_parameters
+        if self.objective_parameters is None or 'num_processes' not in self.objective_parameters:
+            self.num_processes = 1
+        else:
+            self.num_processes = self.objective_parameters['num_processes']
+        if self.objective_parameters is None or 'precomputed_energies' not in self.objective_parameters:
+            self.precomputed_energies = None
+        else:
+            self.precomputed_energies = self.objective_parameters['precomputed_energies']
         self.vals_statistic = []
         self.vals = []
         self.points = []
@@ -57,7 +66,7 @@ class ObjectiveWrapper:
             self.points.append(theta)
             resstrs = self.var_form.run(theta, backend_description=self.backend_description, execute_parameters=self.execute_parameters)
             if self.backend_description['package'] == 'qiskit' and 'statevector' in self.backend_description['name']:
-                objective_value = obj_from_statevector(resstrs, self.obj)
+                objective_value = obj_from_statevector(resstrs, self.obj, precomputed=self.precomputed_energies, nprocesses=self.num_processes)
             else:
                 if contains_and_raised(self.objective_parameters, 'save_resstrs'):
                     self.resstrs.append(resstrs)

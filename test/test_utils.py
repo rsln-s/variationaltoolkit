@@ -8,20 +8,22 @@ from variationaltoolkit.utils import obj_from_statevector, precompute_obj
 from variationaltoolkit.objectives import maxcut_obj
 from variationaltoolkit.endianness import state_num2str
 
+
+def local_pickleable_maxcut_obj(x, G=None):
+    cut = 0
+    for i, j in G.edges():
+        if x[i] != x[j]:
+            # the edge is cut
+            cut -= 1
+    return cut
+
 class TestUtils(unittest.TestCase):
 
     def setUp(self):
         elist = [[0,1], [0,2], [0,3], [1,4], [1,5], [2,4], [2,5], [3,4], [3,5]]
         self.G=nx.OrderedGraph()
         self.G.add_edges_from(elist)
-        def maxcut_obj(x):
-            cut = 0
-            for i, j in self.G.edges():
-                if x[i] != x[j]:
-                    # the edge is cut
-                    cut -= 1
-            return cut
-        self.obj = maxcut_obj
+        self.obj = partial(local_pickleable_maxcut_obj, G=self.G)
 
     def test_obj_from_statevector(self):
         sv = np.zeros(2**6)

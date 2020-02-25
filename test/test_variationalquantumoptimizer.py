@@ -120,6 +120,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
                 varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4}, 
                 backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
                 problem_description={'offset': offset},
+                objective_parameters={'num_processes':8},
                 execute_parameters=self.execute_parameters)
         varopt.optimize()
         res = varopt.get_optimal_solution()
@@ -138,6 +139,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
                 varform_description={'name':'QAOA', 'p':15, 'cost_operator':C, 'num_qubits':4}, 
                 backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
                 problem_description={'offset': offset, 'smooth_schedule':True},
+                objective_parameters={'num_processes':8},
                 execute_parameters=self.execute_parameters)
         res = varopt.optimize()
         self.assertTrue(res['min_val'] < -3.5)

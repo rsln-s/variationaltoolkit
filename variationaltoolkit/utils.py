@@ -103,23 +103,31 @@ def cost_operator_to_vec(C, offset=0):
     return m_diag+offset
     
 
-def pickleable_wrapper_with_parameter_return(x, obj_f=None):
+def pickleable_wrapper_with_parameter_return_and_conversion_to_int(x, obj_f=None):
     return x, obj_f(np.array([int(y) for y in x]))
 
 
 def precompute_obj(obj_f, nqubits, nprocesses=1):
-    obj_f_w = partial(pickleable_wrapper_with_parameter_return, obj_f=obj_f)
+    obj_f_w = partial(pickleable_wrapper_with_parameter_return_and_conversion_to_int, obj_f=obj_f)
 
     with Pool(nprocesses) as p:
         bitstrs = [state_num2str(k,nqubits) for k in range(2**nqubits)]
         return dict(p.map(obj_f_w, bitstrs))
 
 
-def obj_from_statevector(sv, obj_f):
+def pickleable_wrapper_conversion_to_int_multiply_by_ampl(x, obj_f=None):
+    return obj_f(np.array([int(y) for y in x[0]])) * (np.abs(x[1])**2)
+
+def obj_from_statevector(sv, obj_f, precomputed=None, nprocesses=1):
     adj_sv = get_adjusted_state(sv)
     counts = state_to_ampl_counts(adj_sv)
     assert(np.isclose(sum(np.abs(v)**2 for v in counts.values()), 1))
-    return sum(obj_f(np.array([int(x) for x in k])) * (np.abs(v)**2) for k, v in counts.items())
+    if precomputed is None:
+        obj_f_w = partial(pickleable_wrapper_conversion_to_int_multiply_by_ampl, obj_f=obj_f)
+        with Pool(nprocesses) as p: 
+            return sum(p.map(obj_f_w, counts.items()))
+    else:
+        return sum(precomputed[k] * (np.abs(v)**2) for k, v in counts.items())
 
 
 def check_cost_operator(C, obj_f, offset=0):

@@ -36,6 +36,7 @@ class TestObjectiveWrapper(unittest.TestCase):
         obj_w = ObjectiveWrapper(self.obj, 
                 varform_description={'name':'QAOA', 'p':10, 'num_qubits':4, 'cost_operator':self.C}, 
                 backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
+                objective_parameters={'num_processes':8},
                 execute_parameters={})
         obj_f = obj_w.get_obj()
         parameters = np.array([ 5.97337687,  2.58355601,  1.40698116,  1.41929411, -0.78430107,

@@ -33,7 +33,7 @@ class ObjectiveWrapperSmooth(ObjectiveWrapper):
             self.points.append(theta)
             resstrs = self.var_form.run(theta, backend_description=self.backend_description, execute_parameters=self.execute_parameters)
             if self.backend_description['package'] == 'qiskit' and 'statevector' in self.backend_description['name']:
-                objective_value = obj_from_statevector(resstrs, self.obj)
+                objective_value = obj_from_statevector(resstrs, self.obj, precomputed=self.precomputed_energies, nprocesses=self.num_processes)
             else:
                 if contains_and_raised(self.objective_parameters, 'save_resstrs'):
                     self.resstrs.append(resstrs)
