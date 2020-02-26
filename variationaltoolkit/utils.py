@@ -115,17 +115,15 @@ def precompute_obj(obj_f, nqubits, nprocesses=1):
         return dict(p.map(obj_f_w, bitstrs))
 
 
-def pickleable_wrapper_conversion_to_int_multiply_by_ampl(x, obj_f=None):
-    return obj_f(np.array([int(y) for y in x[0]])) * (np.abs(x[1])**2)
-
-def obj_from_statevector(sv, obj_f, precomputed=None, nprocesses=1):
+def obj_from_statevector(sv, obj_f, precomputed=None):
+    """Compute objective from Qiskit statevector
+    For large number of qubits, this is very slow. 
+    """
     adj_sv = get_adjusted_state(sv)
     counts = state_to_ampl_counts(adj_sv)
     assert(np.isclose(sum(np.abs(v)**2 for v in counts.values()), 1))
     if precomputed is None:
-        obj_f_w = partial(pickleable_wrapper_conversion_to_int_multiply_by_ampl, obj_f=obj_f)
-        with Pool(nprocesses) as p: 
-            return sum(p.map(obj_f_w, counts.items()))
+        return sum(obj_f(np.array([int(x) for x in k])) * (np.abs(v)**2) for k, v in counts.items())
     else:
         return sum(precomputed[k] * (np.abs(v)**2) for k, v in counts.items())
 

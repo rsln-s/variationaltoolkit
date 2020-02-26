@@ -45,10 +45,6 @@ class ObjectiveWrapper:
             self.var_form = VarForm(varform_description=varform_description, problem_description=problem_description)
         self.num_parameters = self.var_form.num_parameters
         del self.var_form.num_parameters
-        if self.objective_parameters is None or 'num_processes' not in self.objective_parameters:
-            self.num_processes = 1
-        else:
-            self.num_processes = self.objective_parameters['num_processes']
         if self.objective_parameters is None or 'precomputed_energies' not in self.objective_parameters:
             self.precomputed_energies = None
         else:
@@ -66,7 +62,7 @@ class ObjectiveWrapper:
             self.points.append(theta)
             resstrs = self.var_form.run(theta, backend_description=self.backend_description, execute_parameters=self.execute_parameters)
             if self.backend_description['package'] == 'qiskit' and 'statevector' in self.backend_description['name']:
-                objective_value = obj_from_statevector(resstrs, self.obj, precomputed=self.precomputed_energies, nprocesses=self.num_processes)
+                objective_value = obj_from_statevector(resstrs, self.obj, precomputed=self.precomputed_energies)
             else:
                 if contains_and_raised(self.objective_parameters, 'save_resstrs'):
                     self.resstrs.append(resstrs)
