@@ -20,8 +20,17 @@ import argparse
 from functools import partial
 from variationaltoolkit import ObjectiveWrapper
 from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
-from libensemble.utils import parse_args
-nworkers, _, _, _ = parse_args()
+from libensemble.tools import parse_args, add_unique_random_streams
+from libensemble.comms.logs import LogConfig
+import uuid
+
+logs = LogConfig.config
+libE_run_id = uuid.uuid4()
+logs.stat_filename = "libE_stats_" + str(libE_run_id) + ".log"
+logs.filename = "ensemble_" + str(libE_run_id) + ".log"
+
+nworkers, is_master, libE_specs, _ = parse_args()
+libE_specs={'save_H_and_persis_on_abort': False}
 
 def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
 
@@ -82,19 +91,7 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
     # Tell libEnsemble when to stop
     exit_criteria = {'sim_max': sim_max}
 
-    persis_info = {'next_to_give': 0}
-    persis_info['total_gen_calls'] = 0
-    persis_info['last_worker'] = 0
-    persis_info[0] = {
-        'active_runs': set(),
-        'run_order': {},
-        'old_runs': {},
-        'total_runs': 0,
-        'rand_stream': np.random.RandomState()
-    }
-
-    for i in range(1, MPI.COMM_WORLD.Get_size()):
-        persis_info[i] = {'rand_stream': np.random.RandomState()}
+    persis_info = add_unique_random_streams({}, nworkers + 1)
 
     alloc_specs = {'alloc_f': alloc_f, 'out': [('given_back', bool)], 'user': {}}
 
@@ -103,6 +100,7 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
         gen_specs,
         exit_criteria,
         persis_info=persis_info,
+        libE_specs=libE_specs,
         alloc_specs=alloc_specs)
     if MPI.COMM_WORLD.Get_rank() == 0:
         return (H, persis_info)
@@ -170,8 +168,7 @@ if __name__ == '__main__':
 
     t = optimize_obj(obj_w.get_obj(), obj_w.num_parameters, ub=ub, lb=lb, sim_max=args.maxiter)
 
-    if MPI.COMM_WORLD.Get_rank() == 0:
-        print(np.min(t[0]['f']))
+    # if is_master:
     #     #outpath = f"/zfs/safrolab/users/rshaydu/quantum/data/nasa_2020/libe_optimized_schedules/n_{args.nnodes}_p_{args.p}_gseed_{args.graph_generator_seed}.p"
     #     outpath = f"/zfs/safrolab/users/rshaydu/quantum/data/nasa_2020/libe_optimized_schedules/petersen_p_{args.p}.p"
     #     print(f"Found solution {min(t[0]['f'])}, saving to {outpath}")
