@@ -68,6 +68,7 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
             'initial_sample_size': 20,  # num points sampled before starting opt runs, one per worker
             'localopt_method': 'LN_COBYLA',
             'sample_points': np.atleast_2d(np.random.uniform(lb, ub, (20,len(lb)))),
+            'run_max_eval':100,
             'ftol_rel':1e-10,
             'xtol_rel':1e-10,
             'num_pts_first_pass': nworkers-1,
