@@ -4,7 +4,8 @@ import networkx as nx
 import time
 from functools import partial
 from qiskit import QuantumCircuit, Aer, execute
-from variationaltoolkit.utils import obj_from_statevector, precompute_obj
+from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
+from variationaltoolkit.utils import obj_from_statevector, precompute_obj, cost_operator_to_vec
 from variationaltoolkit.objectives import maxcut_obj
 from variationaltoolkit.endianness import state_num2str
 
@@ -49,6 +50,15 @@ class TestUtils(unittest.TestCase):
         precomputed = precompute_obj(obj, N)
         self.assertEqual(len(precomputed[np.where(sv)]), 1)
         self.assertEqual(obj_from_statevector(sv, obj), precomputed[np.where(sv)][0])
+
+    def test_precompute_obj_cost_ham(self):
+        w = nx.adjacency_matrix(self.G, nodelist=range(self.G.number_of_nodes()))
+        C, offset = get_maxcut_operator(w)
+        cost_diag = cost_operator_to_vec(C, offset)
+        precomputed = precompute_obj(self.obj, self.G.number_of_nodes())
+        self.assertTrue(np.allclose(cost_diag, precomputed))
+
+
 
 
 if __name__ == '__main__':

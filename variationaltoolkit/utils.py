@@ -110,7 +110,9 @@ def precompute_obj(obj_f, nqubits):
 
 def obj_from_statevector(sv, obj_f, precomputed=None):
     """Compute objective from Qiskit statevector
-    For large number of qubits, this is very slow. 
+    For large number of qubits, this is slow. 
+    To speed up for larger qubits, pass a vector of precomputed energies
+    for QAOA, precomputed should be the same as the diagonal of the cost Hamiltonian
     """
     if precomputed is None:
         adj_sv = get_adjusted_state(sv)
