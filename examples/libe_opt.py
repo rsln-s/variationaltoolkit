@@ -65,13 +65,13 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
         'user':{
             'lb': lb,
             'ub': ub,
-            'initial_sample_size': 1,  # num points sampled before starting opt runs, one per worker
+            'initial_sample_size': 20,  # num points sampled before starting opt runs, one per worker
             'localopt_method': 'LN_COBYLA',
-            'sample_points': np.atleast_2d(np.random.uniform(lb, ub)),
+            'sample_points': np.atleast_2d(np.random.uniform(lb, ub, (20,len(lb)))),
             'ftol_rel':1e-10,
             'xtol_rel':1e-10,
             'num_pts_first_pass': nworkers-1,
-            'max_active_runs': 1,
+            'max_active_runs': 2,
             'periodic': True,
         }
     }
@@ -168,8 +168,9 @@ if __name__ == '__main__':
     t = optimize_obj(obj_w.get_obj(), obj_w.num_parameters, ub=ub, lb=lb, sim_max=args.maxiter)
 
     if MPI.COMM_WORLD.Get_rank() == 0:
-        #outpath = f"/zfs/safrolab/users/rshaydu/quantum/data/nasa_2020/libe_optimized_schedules/n_{args.nnodes}_p_{args.p}_gseed_{args.graph_generator_seed}.p"
-        outpath = f"/zfs/safrolab/users/rshaydu/quantum/data/nasa_2020/libe_optimized_schedules/petersen_p_{args.p}.p"
-        print(f"Found solution {min(t[0]['f'])}, saving to {outpath}")
-        pickle.dump(t, open(outpath, "wb"))
+        print(np.min(t[0]['f']))
+    #     #outpath = f"/zfs/safrolab/users/rshaydu/quantum/data/nasa_2020/libe_optimized_schedules/n_{args.nnodes}_p_{args.p}_gseed_{args.graph_generator_seed}.p"
+    #     outpath = f"/zfs/safrolab/users/rshaydu/quantum/data/nasa_2020/libe_optimized_schedules/petersen_p_{args.p}.p"
+    #     print(f"Found solution {min(t[0]['f'])}, saving to {outpath}")
+    #     pickle.dump(t, open(outpath, "wb"))
         
