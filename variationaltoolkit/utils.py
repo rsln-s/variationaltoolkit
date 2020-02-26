@@ -101,31 +101,24 @@ def cost_operator_to_vec(C, offset=0):
                 assert(np.imag(m[i][j]) == 0)
                 m_diag[i] = np.real(m[i][j])
     return m_diag+offset
-    
-
-def pickleable_wrapper_with_parameter_return_and_conversion_to_int(x, obj_f=None):
-    return x, obj_f(np.array([int(y) for y in x]))
 
 
-def precompute_obj(obj_f, nqubits, nprocesses=1):
-    obj_f_w = partial(pickleable_wrapper_with_parameter_return_and_conversion_to_int, obj_f=obj_f)
-
-    with Pool(nprocesses) as p:
-        bitstrs = [state_num2str(k,nqubits) for k in range(2**nqubits)]
-        return dict(p.map(obj_f_w, bitstrs))
+def precompute_obj(obj_f, nqubits):
+    bitstrs = [state_num2str(k,nqubits)[::-1] for k in range(2**nqubits)] 
+    return np.array([obj_f(np.array([int(y) for y in x])) for x in bitstrs])
 
 
 def obj_from_statevector(sv, obj_f, precomputed=None):
     """Compute objective from Qiskit statevector
     For large number of qubits, this is very slow. 
     """
-    adj_sv = get_adjusted_state(sv)
-    counts = state_to_ampl_counts(adj_sv)
-    assert(np.isclose(sum(np.abs(v)**2 for v in counts.values()), 1))
     if precomputed is None:
+        adj_sv = get_adjusted_state(sv)
+        counts = state_to_ampl_counts(adj_sv)
+        assert(np.isclose(sum(np.abs(v)**2 for v in counts.values()), 1))
         return sum(obj_f(np.array([int(x) for x in k])) * (np.abs(v)**2) for k, v in counts.items())
     else:
-        return sum(precomputed[k] * (np.abs(v)**2) for k, v in counts.items())
+        return np.dot(precomputed, np.abs(sv)**2)
 
 
 def check_cost_operator(C, obj_f, offset=0):

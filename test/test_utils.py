@@ -47,17 +47,8 @@ class TestUtils(unittest.TestCase):
         backend = Aer.get_backend('statevector_simulator')
         sv = execute(qc, backend=backend).result().get_statevector()
         precomputed = precompute_obj(obj, N)
-        self.assertEqual(obj_from_statevector(sv, obj), precomputed['1000'])
-
-    def test_precompute_obj_large(self):
-        G = nx.random_regular_graph(3,18, seed=1)
-        N = G.number_of_nodes()
-        w = nx.adjacency_matrix(G, nodelist=range(N))
-        obj = partial(maxcut_obj, w=w)
-        s = time.time()
-        precompute_obj(obj, N, nprocesses=16)
-        e = time.time()
-        self.assertTrue(e-s < 3)
+        self.assertEqual(len(precomputed[np.where(sv)]), 1)
+        self.assertEqual(obj_from_statevector(sv, obj), precomputed[np.where(sv)][0])
 
 
 if __name__ == '__main__':
