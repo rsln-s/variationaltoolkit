@@ -21,16 +21,17 @@ from functools import partial
 from variationaltoolkit import ObjectiveWrapper
 from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
 from libensemble.tools import parse_args, add_unique_random_streams
-from libensemble.comms.logs import LogConfig
-import uuid
 
-logs = LogConfig.config
-libE_run_id = uuid.uuid4()
-logs.stat_filename = "libE_stats_" + str(libE_run_id) + ".log"
-logs.filename = "ensemble_" + str(libE_run_id) + ".log"
+# from libensemble.comms.logs import LogConfig
+# import uuid
+# logs = LogConfig.config
+# libE_run_id = uuid.uuid4()
+# logs.stat_filename = "libE_stats_" + str(libE_run_id) + ".log"
+# logs.filename = "ensemble_" + str(libE_run_id) + ".log"
 
 nworkers, is_master, libE_specs, _ = parse_args()
-libE_specs={'save_H_and_persis_on_abort': False}
+libE_specs['save_H_and_persis_on_abort'] = False
+libE_specs['disable_log_files'] = True
 
 def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
 
