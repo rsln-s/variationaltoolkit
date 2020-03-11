@@ -3,6 +3,8 @@ import numpy as np
 import networkx as nx
 import time
 from functools import partial
+from qiskit import QuantumCircuit
+from qiskit.circuit import Parameter
 from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
 from variationaltoolkit.objectives import maxcut_obj, modularity_obj
 from variationaltoolkit import VariationalQuantumOptimizer
@@ -118,6 +120,31 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
                 'COBYLA', 
                 optimizer_parameters=self.optimizer_parameters, 
                 varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4}, 
+                backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
+                problem_description={'offset': offset},
+                execute_parameters=self.execute_parameters)
+        varopt.optimize()
+        res = varopt.get_optimal_solution()
+        self.assertEqual(res[0], -4)
+        self.assertTrue(np.array_equal(res[1], np.array([1,0,0,1])) or np.array_equal(res[1], np.array([0,1,1,0])))
+        logging.disable(logging.NOTSET)
+
+    def test_maxcut_qaoa_mixer_circuit(self):
+        import logging; logging.disable(logging.CRITICAL)
+        C, offset = get_maxcut_operator(self.w)
+        # build transverse field mixer circuit
+        mixer_circuit = QuantumCircuit(4)
+        beta = Parameter('beta')
+        for q1 in range(4):
+            mixer_circuit.h(q1)
+            mixer_circuit.rz(2*beta, q1)
+            mixer_circuit.h(q1)
+        # pass it to variational quantum optimizer
+        varopt = VariationalQuantumOptimizer(
+                self.obj, 
+                'COBYLA', 
+                optimizer_parameters=self.optimizer_parameters, 
+                varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4, 'use_mixer_circuit':True, 'mixer_circuit':mixer_circuit}, 
                 backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
                 problem_description={'offset': offset},
                 execute_parameters=self.execute_parameters)
