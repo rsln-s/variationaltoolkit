@@ -20,8 +20,18 @@ import argparse
 from functools import partial
 from variationaltoolkit import ObjectiveWrapper
 from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
-from libensemble.utils import parse_args
-nworkers, _, _, _ = parse_args()
+from libensemble.tools import parse_args, add_unique_random_streams
+
+# from libensemble.comms.logs import LogConfig
+# import uuid
+# logs = LogConfig.config
+# libE_run_id = uuid.uuid4()
+# logs.stat_filename = "libE_stats_" + str(libE_run_id) + ".log"
+# logs.filename = "ensemble_" + str(libE_run_id) + ".log"
+
+nworkers, is_master, libE_specs, _ = parse_args()
+libE_specs['save_H_and_persis_on_abort'] = False
+libE_specs['disable_log_files'] = True
 
 def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
 
@@ -34,7 +44,6 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
         for i, x in enumerate(H['x']):
             O['f'][i] = obj_val(x)
 
-        print(O, flush=True)
         return O, gen_info
 
     script_name = os.path.splitext(os.path.basename(__file__))[0]
@@ -56,6 +65,7 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
         ('local_min', bool),
   ]
 
+    np.random.seed(0)
     # State the generating function, its arguments, output, and necessary parameters.
     gen_specs = {
         'gen_f': gen_f,
@@ -66,10 +76,15 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
             'lb': lb,
             'ub': ub,
             'initial_sample_size': 20,  # num points sampled before starting opt runs, one per worker
-            'localopt_method': 'scipy_COBYLA',
-            'xatol':1e-10,
-            'fatol':1e-10,
+            # 'localopt_method': 'scipy_COBYLA',
+            # 'scipy_kwargs': {'tol': 1e-10, 'options': {'disp':True, 'maxiter': 100}},
+            'localopt_method': 'LN_COBYLA',
+            'sample_points': np.atleast_2d(np.random.uniform(lb, ub, (20,len(lb)))),
+            'run_max_eval':100,
+            'ftol_rel':1e-10,
+            'xtol_rel':1e-10,
             'num_pts_first_pass': nworkers-1,
+            'max_active_runs': 2,
             'periodic': True,
         }
     }
@@ -77,19 +92,7 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
     # Tell libEnsemble when to stop
     exit_criteria = {'sim_max': sim_max}
 
-    persis_info = {'next_to_give': 0}
-    persis_info['total_gen_calls'] = 0
-    persis_info['last_worker'] = 0
-    persis_info[0] = {
-        'active_runs': set(),
-        'run_order': {},
-        'old_runs': {},
-        'total_runs': 0,
-        'rand_stream': np.random.RandomState()
-    }
-
-    for i in range(1, MPI.COMM_WORLD.Get_size()):
-        persis_info[i] = {'rand_stream': np.random.RandomState()}
+    persis_info = add_unique_random_streams({}, nworkers + 1)
 
     alloc_specs = {'alloc_f': alloc_f, 'out': [('given_back', bool)], 'user': {}}
 
@@ -98,6 +101,7 @@ def optimize_obj(obj_val, num_parameters, ub=None, lb=None, sim_max=None):
         gen_specs,
         exit_criteria,
         persis_info=persis_info,
+        libE_specs=libE_specs,
         alloc_specs=alloc_specs)
     if MPI.COMM_WORLD.Get_rank() == 0:
         return (H, persis_info)
@@ -116,7 +120,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--maxiter", type = int,
-        default = "100",
+        default = "300",
         help = "number of iterations, default is 100")
     parser.add_argument(
         "--nnodes", type = int,
@@ -155,9 +159,6 @@ if __name__ == '__main__':
     lb = np.array([0, 0] * args.p)
     ub = np.array([np.pi / 2] * args.p + [np.pi] * args.p)
 
-    #lb = np.array([-np.inf, -np.inf] * args.p)
-    #ub = np.array([np.inf, np.inf] * args.p)
-
     obj_w = ObjectiveWrapper(
             obj_f_cut, 
             varform_description={'name':'QAOA', 'p':args.p, 'cost_operator':C, 'num_qubits':G.number_of_nodes()}, 
@@ -168,9 +169,9 @@ if __name__ == '__main__':
 
     t = optimize_obj(obj_w.get_obj(), obj_w.num_parameters, ub=ub, lb=lb, sim_max=args.maxiter)
 
-    if MPI.COMM_WORLD.Get_rank() == 0:
-        #outpath = f"/zfs/safrolab/users/rshaydu/quantum/data/nasa_2020/libe_optimized_schedules/n_{args.nnodes}_p_{args.p}_gseed_{args.graph_generator_seed}.p"
-        outpath = f"/zfs/safrolab/users/rshaydu/quantum/data/nasa_2020/libe_optimized_schedules/petersen_p_{args.p}.p"
-        print(f"Found solution {min(t[0]['f'])}, saving to {outpath}")
-        pickle.dump(t, open(outpath, "wb"))
+    # if is_master:
+    #     #outpath = f"/zfs/safrolab/users/rshaydu/quantum/data/nasa_2020/libe_optimized_schedules/n_{args.nnodes}_p_{args.p}_gseed_{args.graph_generator_seed}.p"
+    #     outpath = f"/zfs/safrolab/users/rshaydu/quantum/data/nasa_2020/libe_optimized_schedules/petersen_p_{args.p}.p"
+    #     print(f"Found solution {min(t[0]['f'])}, saving to {outpath}")
+    #     pickle.dump(t, open(outpath, "wb"))
         
