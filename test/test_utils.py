@@ -5,7 +5,7 @@ import time
 from functools import partial
 from qiskit import QuantumCircuit, Aer, execute
 from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
-from variationaltoolkit.utils import obj_from_statevector, precompute_obj, cost_operator_to_vec
+from variationaltoolkit.utils import obj_from_statevector, precompute_obj, cost_operator_to_vec, solution_density
 from variationaltoolkit.objectives import maxcut_obj
 from variationaltoolkit.endianness import state_num2str
 
@@ -58,6 +58,11 @@ class TestUtils(unittest.TestCase):
         precomputed = precompute_obj(self.obj, self.G.number_of_nodes())
         self.assertTrue(np.allclose(cost_diag, precomputed))
 
+    def test_solution_density(self):
+        G = nx.generators.classic.complete_graph(8)
+        obj_f = partial(local_pickleable_maxcut_obj, G=G)
+        density = solution_density(obj_f, G.number_of_nodes())
+        self.assertEqual(density, 0.2734375)
 
 
 
