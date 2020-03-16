@@ -143,3 +143,21 @@ def brute_force(obj_f, num_variables):
             best_cost_brute = cost
             xbest_brute = x
     return best_cost_brute, xbest_brute
+
+
+def solution_density(obj_f, num_variables):
+    solutions = []
+    best_cost_brute = 0
+    for b in range(2**num_variables):
+        x = [int(t) for t in reversed(list(bin(b)[2:].zfill(num_variables)))]
+        cost = obj_f(x)
+        solutions.append(cost)
+        if cost < best_cost_brute:
+            best_cost_brute = cost
+            xbest_brute = x
+    assert(len(solutions) == 2**num_variables)
+    noptimal = 0
+    for cost in solutions:
+        if np.isclose(cost, best_cost_brute):
+            noptimal += 1
+    return float(noptimal) / float(2**num_variables)
