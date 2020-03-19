@@ -1,3 +1,4 @@
 from .varform import VarForm
 from .variationalquantumoptimizersequential import VariationalQuantumOptimizerSequential
+from .variationalquantumoptimizeraposmm import VariationalQuantumOptimizerAPOSMM
 from .objectivewrapper import ObjectiveWrapper
