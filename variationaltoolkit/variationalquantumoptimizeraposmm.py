@@ -99,22 +99,41 @@ class VariationalQuantumOptimizerAPOSMM(VariationalQuantumOptimizer):
             'user':{
                 'lb': lb,
                 'ub': ub,
-                'initial_sample_size': 20,  # num points sampled before starting opt runs, one per worker
-                # 'localopt_method': 'scipy_COBYLA',
-                # 'scipy_kwargs': {'tol': 1e-10, 'options': {'disp':True, 'maxiter': 100}},
-                'localopt_method': 'LN_COBYLA',
-                'sample_points': np.atleast_2d(np.random.uniform(lb, ub, (20,len(lb)))),
+                'initial_sample_size': 1,  # num points sampled before starting opt runs, one per worker
+                'localopt_method': self.optimizer_name,
+                'sample_points': np.atleast_2d(self.initial_point),
                 'run_max_eval':100,
-                'ftol_rel':1e-10,
-                'xtol_rel':1e-10,
                 'num_pts_first_pass': nworkers-1,
                 'max_active_runs': 2,
                 'periodic': True,
             }
         }
-
-        # Tell libEnsemble when to stop
-        exit_criteria = {'sim_max': self.optimizer_parameters['maxiter']}
+        if self.optimizer_name in ['scipy_Nelder-Mead', 'scipy_COBYLA']:
+            if 'options' in self.optimizer_parameters:
+                # assume scipy kwargs
+                gen_specs['user']['scipy_kwargs'] = self.optimizer_parameters
+                exit_criteria = {'sim_max': self.optimizer_parameters['options']['maxiter']}
+            else:
+                # use default
+                if 'maxiter' in self.optimizer_parameters:
+                    _maxiter = self.optimizer_parameters['maxiter']
+                else:
+                    _maxiter = 100 
+                    logger.warning(f"Ignoring scipy parameters -- incorrect format received: {self.optimizer_parameters}")
+                gen_specs['user']['scipy_kwargs'] = {'tol': 1e-10, 'options': {'disp':False, 'maxiter': _maxiter}}
+                exit_criteria = {'sim_max': _maxiter}
+        else:
+            # assume nlopt
+            if 'ftol_rel' in self.optimizer_parameters:
+                gen_specs['user']['ftol_rel'] = self.optimizer_parameters['ftol_rel']
+            else:
+                gen_specs['user']['ftol_rel'] = 1e-10
+            if 'xtol_rel' in self.optimizer_parameters:
+                gen_specs['user']['xtol_rel'] = self.optimizer_parameters['xtol_rel']
+            else:
+                gen_specs['user']['xtol_rel'] = 1e-10
+            # Tell libEnsemble when to stop
+            exit_criteria = {'sim_max': self.optimizer_parameters['maxiter']}
 
         persis_info = add_unique_random_streams({}, nworkers + 1)
 

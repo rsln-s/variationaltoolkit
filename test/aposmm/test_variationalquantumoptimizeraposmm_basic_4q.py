@@ -14,7 +14,7 @@ obj = partial(maxcut_obj, w=w)
 C, offset = get_maxcut_operator(w)
 varopt = VariationalQuantumOptimizerAPOSMM(
         obj, 
-        'COBYLA', 
+        'scipy_COBYLA', 
         optimizer_parameters={'maxiter':100}, 
         varform_description={'name':'QAOA', 'p':4, 'cost_operator':C, 'num_qubits':4}, 
         backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
