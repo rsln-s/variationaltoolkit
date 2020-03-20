@@ -38,6 +38,6 @@ from https://www.palmetto.clemson.edu/palmetto/jupyterhub_add_kernel.html
 
 ## Testing
 
-We use Python unittest for tests. To run tests, run `python -m unittest` in the project root.
+To run tests, run `test/run_tests.sh` in the project root. It runs both unittest for sequential tests and mpi tests for aposmm.
 
 In general, if you are adding a test for method `foo` implemented in `variationaltoolkit/bar/blah.py`, the test should be in `test/bar/test_blah.py` and have name `test_foo`. Consult existing tests for examples.

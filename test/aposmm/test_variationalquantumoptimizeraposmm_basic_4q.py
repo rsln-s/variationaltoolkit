@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import networkx as nx
 from functools import partial
 from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
@@ -21,5 +22,6 @@ varopt = VariationalQuantumOptimizerAPOSMM(
         execute_parameters={})
 res = varopt.optimize()
 if is_master:
-    print(res['min_val'])
-    print(res['opt_params'])
+    assert(res['min_val'] < -3.75)
+    script_name = os.path.splitext(os.path.basename(__file__))[0]
+    print(f"{script_name} finished successfully")
