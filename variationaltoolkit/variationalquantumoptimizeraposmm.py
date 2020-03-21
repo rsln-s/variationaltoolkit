@@ -134,7 +134,7 @@ class VariationalQuantumOptimizerAPOSMM(VariationalQuantumOptimizer):
                 'run_max_eval':100,
                 'num_pts_first_pass': nworkers-1,
                 'max_active_runs': 2,
-                'periodic': True,
+                'periodic': self.obj_w.is_periodic,
             }
         }
         gen_specs['user'].update(self.gen_specs_user)
