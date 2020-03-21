@@ -24,12 +24,13 @@ libE_specs['save_H_and_persis_on_abort'] = False
 libE_specs['disable_log_files'] = True
 
 class VariationalQuantumOptimizerAPOSMM(VariationalQuantumOptimizer):
-    def __init__(self, obj, optimizer_name, **kwargs):
+    def __init__(self, obj, optimizer_name, gen_specs_user={}, **kwargs):
         """Constuctor.
         
         Args:
             obj (function) : takes a list of 0,1 and returns objective function value for that vector
             optimizer_name        (str) : optimizer name. For now, only qiskit optimizers are supported
+            gen_specs_user       (dict) : passed directly to libE via gen_specs['user']
             initial_point    (np.array) : initial point for the optimizer
             variable_bounds (list[(float, float)]) : list of variable
                                             bounds, given as pairs (lower, upper). None means
@@ -49,6 +50,33 @@ class VariationalQuantumOptimizerAPOSMM(VariationalQuantumOptimizer):
 
         self.optimizer_name = optimizer_name
         self.optimizer_parameters = kwargs['optimizer_parameters']
+        if self.optimizer_name in ['scipy_Nelder-Mead', 'scipy_COBYLA']:
+            if 'options' in self.optimizer_parameters:
+                # assume scipy kwargs
+                gen_specs_user['scipy_kwargs'] = self.optimizer_parameters
+                self.exit_criteria = {'sim_max': self.optimizer_parameters['options']['maxiter']}
+            else:
+                # use default
+                if 'maxiter' in self.optimizer_parameters:
+                    _maxiter = self.optimizer_parameters['maxiter']
+                else:
+                    _maxiter = 100 
+                    logger.warning(f"Ignoring scipy parameters -- incorrect format received: {self.optimizer_parameters}")
+                gen_specs_user['scipy_kwargs'] = {'tol': 1e-10, 'options': {'disp':False, 'maxiter': _maxiter}}
+                self.exit_criteria = {'sim_max': _maxiter}
+        else:
+            # assume nlopt
+            if 'ftol_rel' in self.optimizer_parameters:
+                gen_specs_user['ftol_rel'] = self.optimizer_parameters['ftol_rel']
+            else:
+                gen_specs_user['ftol_rel'] = 1e-10
+            if 'xtol_rel' in self.optimizer_parameters:
+                gen_specs_user['xtol_rel'] = self.optimizer_parameters['xtol_rel']
+            else:
+                gen_specs_user['xtol_rel'] = 1e-10
+            # Tell libEnsemble when to stop
+            self.exit_criteria = {'sim_max': self.optimizer_parameters['maxiter']}
+        self.gen_specs_user = gen_specs_user
 
 
     def optimize(self):
@@ -91,6 +119,7 @@ class VariationalQuantumOptimizerAPOSMM(VariationalQuantumOptimizer):
 
         np.random.seed(0)
         # State the generating function, its arguments, output, and necessary parameters.
+        # This is the default dictionary, we update it below
         gen_specs = {
             'gen_f': gen_f,
             'in': ['x', 'f', 'local_pt', 'sim_id', 'returned', 'x_on_cube', 'local_min'],
@@ -108,32 +137,7 @@ class VariationalQuantumOptimizerAPOSMM(VariationalQuantumOptimizer):
                 'periodic': True,
             }
         }
-        if self.optimizer_name in ['scipy_Nelder-Mead', 'scipy_COBYLA']:
-            if 'options' in self.optimizer_parameters:
-                # assume scipy kwargs
-                gen_specs['user']['scipy_kwargs'] = self.optimizer_parameters
-                exit_criteria = {'sim_max': self.optimizer_parameters['options']['maxiter']}
-            else:
-                # use default
-                if 'maxiter' in self.optimizer_parameters:
-                    _maxiter = self.optimizer_parameters['maxiter']
-                else:
-                    _maxiter = 100 
-                    logger.warning(f"Ignoring scipy parameters -- incorrect format received: {self.optimizer_parameters}")
-                gen_specs['user']['scipy_kwargs'] = {'tol': 1e-10, 'options': {'disp':False, 'maxiter': _maxiter}}
-                exit_criteria = {'sim_max': _maxiter}
-        else:
-            # assume nlopt
-            if 'ftol_rel' in self.optimizer_parameters:
-                gen_specs['user']['ftol_rel'] = self.optimizer_parameters['ftol_rel']
-            else:
-                gen_specs['user']['ftol_rel'] = 1e-10
-            if 'xtol_rel' in self.optimizer_parameters:
-                gen_specs['user']['xtol_rel'] = self.optimizer_parameters['xtol_rel']
-            else:
-                gen_specs['user']['xtol_rel'] = 1e-10
-            # Tell libEnsemble when to stop
-            exit_criteria = {'sim_max': self.optimizer_parameters['maxiter']}
+        gen_specs['user'].update(self.gen_specs_user)
 
         persis_info = add_unique_random_streams({}, nworkers + 1)
 
@@ -142,7 +146,7 @@ class VariationalQuantumOptimizerAPOSMM(VariationalQuantumOptimizer):
         H, persis_info, flag = libE(
             sim_specs,
             gen_specs,
-            exit_criteria,
+            self.exit_criteria,
             persis_info=persis_info,
             libE_specs=libE_specs,
             alloc_specs=alloc_specs)
