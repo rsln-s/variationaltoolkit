@@ -128,7 +128,7 @@ class VariationalQuantumOptimizerAPOSMM(VariationalQuantumOptimizer):
             'user':{
                 'lb': lb,
                 'ub': ub,
-                'initial_sample_size': 1,  # num points sampled before starting opt runs, one per worker
+                'initial_sample_size': nworkers-1,  # num points sampled before starting opt runs, one per worker
                 'localopt_method': self.optimizer_name,
                 'sample_points': np.atleast_2d(self.initial_point),
                 'run_max_eval':100,
