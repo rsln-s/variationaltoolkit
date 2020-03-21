@@ -17,6 +17,7 @@ class ObjectiveWrapperSmooth(ObjectiveWrapper):
         super().__init__(*args, **kwargs)
         self.num_parameters = 4 
         self.p = self.varform_description['p']
+        self.is_periodic = True 
 
     def get_obj(self):
         """Returns objective function

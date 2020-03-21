@@ -7,7 +7,7 @@ from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
 from variationaltoolkit.objectives import maxcut_obj, modularity_obj
-from variationaltoolkit import VariationalQuantumOptimizer
+from variationaltoolkit import VariationalQuantumOptimizerSequential
 
 import importlib.util
 import sys
@@ -16,7 +16,7 @@ _mpsspec = importlib.util.find_spec('mpsbackend')
 
 skip_mpsbackend = ('mpsbackend' not in sys.modules) and (_mpsspec is None)
 
-class TestVariationalQuantumOptimizer(unittest.TestCase):
+class TestVariationalQuantumOptimizerSequential(unittest.TestCase):
 
     def setUp(self):
         self.varform_description = {'name':'RYRZ', 'num_qubits':4, 'depth':3}
@@ -29,7 +29,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
     @unittest.skipIf(skip_mpsbackend, "mpsbackend not found")
     def test_maxcut(self):
         import logging; logging.disable(logging.CRITICAL)
-        varopt = VariationalQuantumOptimizer(
+        varopt = VariationalQuantumOptimizerSequential(
                 self.obj, 
                 'COBYLA', 
                 optimizer_parameters=self.optimizer_parameters, 
@@ -45,7 +45,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
     @unittest.skipIf(skip_mpsbackend, "mpsbackend not found")
     def test_maxcut_seqopt(self):
         import logging; logging.disable(logging.CRITICAL)
-        varopt = VariationalQuantumOptimizer(
+        varopt = VariationalQuantumOptimizerSequential(
                 self.obj, 
                 'SequentialOptimizer', 
                 optimizer_parameters=self.optimizer_parameters, 
@@ -61,7 +61,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
     @unittest.skipIf(skip_mpsbackend, "mpsbackend not found")
     def test_maxcut_mps_varform(self):
         import logging; logging.disable(logging.CRITICAL)
-        varopt = VariationalQuantumOptimizer(
+        varopt = VariationalQuantumOptimizerSequential(
                 self.obj, 
                 'COBYLA', 
                 optimizer_parameters=self.optimizer_parameters, 
@@ -84,7 +84,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         node_list = list(G.nodes())
         mod_obj = partial(modularity_obj, N = 1, G = G, node_list = node_list)
             
-        varopt = VariationalQuantumOptimizer(
+        varopt = VariationalQuantumOptimizerSequential(
                  mod_obj, 
                  'SequentialOptimizer', 
                 optimizer_parameters=self.optimizer_parameters, 
@@ -98,7 +98,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
     def test_maxcut_qaoa(self):
         import logging; logging.disable(logging.CRITICAL)
         C, offset = get_maxcut_operator(self.w)
-        varopt = VariationalQuantumOptimizer(
+        varopt = VariationalQuantumOptimizerSequential(
                 self.obj, 
                 'COBYLA', 
                 optimizer_parameters=self.optimizer_parameters, 
@@ -115,7 +115,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
     def test_maxcut_qaoa_sv(self):
         import logging; logging.disable(logging.CRITICAL)
         C, offset = get_maxcut_operator(self.w)
-        varopt = VariationalQuantumOptimizer(
+        varopt = VariationalQuantumOptimizerSequential(
                 self.obj, 
                 'COBYLA', 
                 optimizer_parameters=self.optimizer_parameters, 
@@ -140,7 +140,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
             mixer_circuit.rz(2*beta, q1)
             mixer_circuit.h(q1)
         # pass it to variational quantum optimizer
-        varopt = VariationalQuantumOptimizer(
+        varopt = VariationalQuantumOptimizerSequential(
                 self.obj, 
                 'COBYLA', 
                 optimizer_parameters=self.optimizer_parameters, 
@@ -157,7 +157,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
     def test_maxcut_qaoa_smooth(self):
         import logging; logging.disable(logging.CRITICAL)
         C, offset = get_maxcut_operator(self.w)
-        varopt = VariationalQuantumOptimizer(
+        varopt = VariationalQuantumOptimizerSequential(
                 self.obj, 
                 'COBYLA', 
                 initial_point=[np.pi/4, 0, 0, np.pi/2],
@@ -176,7 +176,7 @@ class TestVariationalQuantumOptimizer(unittest.TestCase):
         obj = partial(maxcut_obj, w=w)
         C, offset = get_maxcut_operator(w)
         start = time.time()
-        varopt = VariationalQuantumOptimizer(
+        varopt = VariationalQuantumOptimizerSequential(
                 obj, 
                 'COBYLA', 
                 initial_point=np.zeros(2),
