@@ -1,6 +1,7 @@
 # mpirun -np 16 --ppn 16 python slowtest_performance_aposmm_only.py
 # Should run in under 20 sec
 
+import os
 import sys
 import numpy as np
 import networkx as nx
@@ -64,5 +65,9 @@ sys.stderr.flush()
 MPI.COMM_WORLD.Barrier()
 if is_master:
     end_time_aposmm = MPI.Wtime()
-    print(f"APOSMM finished in {end_time_aposmm-start_time_aposmm}s with {world_size} processes", flush=True)
+    running_time = end_time_aposmm-start_time_aposmm
+    print(f"APOSMM finished in {running_time}s with {world_size} processes", flush=True)
+    assert(running_time < 25)
+    script_name = os.path.splitext(os.path.basename(__file__))[0]
+    print(f"{script_name} finished successfully")
 MPI.COMM_WORLD.Barrier()
