@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import copy
 import logging
 from multiprocessing import Pool
 from functools import partial
@@ -162,6 +163,7 @@ def solution_density(obj_f, num_variables):
             noptimal += 1
     return float(noptimal) / float(2**num_variables)
 
+
 def set_log_level(level):
     """
     Sets logging level for everything in variationaltoolkit
@@ -173,3 +175,31 @@ def set_log_level(level):
     for handler in root_logger.handlers:
         if isinstance(handler, type(logging.StreamHandler())):
             handler.setLevel(level)
+
+
+def check_if_a_point_is_a_local_min(obj_f, x_min, eps=1e-2, f_min_precomputed=None):
+    """
+    Checks if points in local_mins array are indeed local minima
+    by evaluating points eps away in each direction
+
+    Args:
+        obj_f (function): objective function 
+        x_min (numpy.array or list): point to check
+        eps (float): size of the step
+        f_min_precomputed (float): function value at x_min to check (optional): 
+                                   f_min_precomputed = obj_f(x_min)
+    """
+    f_min = obj_f(x_min)
+    if f_min_precomputed is not None:
+        assert(np.isclose(f_min, f_min_precomputed))
+    for i, x in enumerate(x_min):
+        x_eps = copy.deepcopy(x_min)
+        x_eps[i] -= eps
+        f_eps = obj_f(x_eps)
+        if(f_eps <= f_min):
+            return False
+        x_eps[i] += 2*eps
+        f_eps = obj_f(x_eps)
+        if(f_eps <= f_min):
+            return False
+    return True
