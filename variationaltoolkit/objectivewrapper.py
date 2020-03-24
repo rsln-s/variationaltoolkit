@@ -28,6 +28,7 @@ class ObjectiveWrapper:
                                            Note: statistic on the value of objective function (e.g. mean) is saved automatically
                                            'save_resstrs' (bool) -- save all raw resstrs
                                            'nprocesses' : number of processes to use for objective function evaluation (only used for statevector_simulator)
+                                           'precomputed_energies' (np.array): array of precomputed energies, should be the same as the diagonal of the cost Hamiltonian 
         """
         validate_objective(obj, varform_description['num_qubits'])
         if backend_description['package'] == 'qiskit' and 'statevector' in backend_description['name'] and varform_description['num_qubits'] > 10:
