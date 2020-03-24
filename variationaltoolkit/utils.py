@@ -161,3 +161,15 @@ def solution_density(obj_f, num_variables):
         if np.isclose(cost, best_cost_brute):
             noptimal += 1
     return float(noptimal) / float(2**num_variables)
+
+def set_log_level(level):
+    """
+    Sets logging level for everything in variationaltoolkit
+    Args:
+        level (logging.LEVEL): level to set 
+    """
+    root_logger = logging.getLogger('variationaltoolkit')
+    root_logger.setLevel(level)
+    for handler in root_logger.handlers:
+        if isinstance(handler, type(logging.StreamHandler())):
+            handler.setLevel(level)
