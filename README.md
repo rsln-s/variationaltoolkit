@@ -2,7 +2,6 @@
 
 This is a set of tools that wrap up variational forms for optimization and more.
 
-
 ## Package Overview
 ![Flowchart](/images/HighLevelVariationalToolkit.png)
 
