@@ -35,7 +35,7 @@ from qiskit.aqua.components.variational_forms import VariationalForm
 class QAOACircuitMixer(VariationalForm):
     """Global X phases and parameterized problem hamiltonian."""
 
-    def __init__(self, cost_operator, p, initial_state=None, mixer_circuit=None):
+    def __init__(self, cost_operator, p, initial_state_circuit=None, mixer_circuit=None, measurement_circuit=None, qregs=None):
         """
         Constructor, following the QAOA paper https://arxiv.org/abs/1411.4028
 
@@ -45,7 +45,7 @@ class QAOACircuitMixer(VariationalForm):
                                                    denoted as U(B, gamma) in the original paper.
             p (int): The integer parameter p, which determines the depth of the circuit,
                      as specified in the original paper.
-            initial_state (InitialState, optional): An optional initial state to use.
+            initial_state_circuit (QuantumCircuit, optional): Circuit that prepares the initial state.
             mixer_circuit (QuantumCircuit, optional): An optional custom mixer operator
                                                               to use instead of
                                                               the global X-rotations,
@@ -54,6 +54,9 @@ class QAOACircuitMixer(VariationalForm):
                                                       Mixer circuit should be a parameterized
                                                       QuantumCircuit with parameter beta
                                                       See default for example
+            measurement_circuit (QuantumCircuit, optional): An optional circuit with measurements (useful if your mixer has ancillas in it)
+            qregs (list of QuantumRegister) : Registers (also vis-a-vis ancillas)
+                                              qregs[0] MUST BE the register with working qubits (i.e. the ones that are measured in the end)
         Raises:
             TypeError: invalid input
         """
@@ -62,7 +65,7 @@ class QAOACircuitMixer(VariationalForm):
         self._cost_operator = cost_operator
         self._num_qubits = cost_operator.num_qubits
         self._p = p
-        self._initial_state = initial_state
+        self._initial_state_circuit = initial_state_circuit
         self._num_parameters = 2 * p
         self._bounds = [(0, np.pi)] * p + [(0, 2 * np.pi)] * p
         self._preferred_init_points = [0] * p * 2
@@ -86,8 +89,10 @@ class QAOACircuitMixer(VariationalForm):
         if len(self._mixer_circuit.parameters) != 1:
             raise ValueError(f"Mixer circuit should have exactly one parameter (beta), received {self._mixer_circuit.parameters}")
         self.support_parameterized_circuit = True
+        self._measurement_circuit = measurement_circuit
+        self.qregs = qregs
 
-    def construct_circuit(self, parameters, q=None):
+    def construct_circuit(self, parameters):
         """ construct circuit """
         angles = parameters
         if not len(angles) == self.num_parameters:
@@ -96,21 +101,21 @@ class QAOACircuitMixer(VariationalForm):
             ))
 
         # initialize circuit, possibly based on given register/initial state
-        if q is None:
-            q = QuantumRegister(self._num_qubits, name='q')
-        if self._initial_state is not None:
-            circuit = self._initial_state.construct_circuit('circuit', q)
-        else:
-            circuit = QuantumCircuit(q)
+        if self.qregs is None:
+            self.qregs = [QuantumRegister(self._num_qubits, name='q')]
+        circuit = QuantumCircuit(*self.qregs)
+        if self._initial_state_circuit is not None:
+            circuit += self._initial_state_circuit
 
-        circuit.u2(0, np.pi, q)
         for idx in range(self._p):
             beta, gamma = angles[idx], angles[idx + self._p]
             circuit += self._cost_operator.evolve(
-                evo_time=gamma, num_time_slices=1, quantum_registers=q
+                evo_time=gamma, num_time_slices=1, quantum_registers=self.qregs[0]
             )
             beta_parameter = self._mixer_circuit.parameters.pop() # checked in constructor that there's only one parameter
             circuit += self._mixer_circuit.bind_parameters({beta_parameter: beta})
+        if self._measurement_circuit is not None:
+            circuit += self._measurement_circuit
         return circuit
 
     @property
