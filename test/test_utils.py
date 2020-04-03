@@ -5,7 +5,7 @@ import time
 from functools import partial
 from qiskit import QuantumCircuit, Aer, execute
 from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
-from variationaltoolkit.utils import obj_from_statevector, precompute_obj, cost_operator_to_vec, solution_density
+from variationaltoolkit.utils import obj_from_statevector, precompute_obj, cost_operator_to_vec, solution_density, get_max_independent_set_operator, check_cost_operator
 from variationaltoolkit.objectives import maxcut_obj
 from variationaltoolkit.endianness import state_num2str
 
@@ -64,6 +64,13 @@ class TestUtils(unittest.TestCase):
         density = solution_density(obj_f, G.number_of_nodes())
         self.assertEqual(density, 0.2734375)
 
+
+    def test_get_max_independent_set_operator(self):
+        n = 4
+        def obj(x):
+            return -sum(x)
+        C, offset = get_max_independent_set_operator(n)
+        check_cost_operator(C, obj, offset=offset)
 
 
 if __name__ == '__main__':

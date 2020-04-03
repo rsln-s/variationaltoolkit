@@ -85,7 +85,8 @@ class VarForm:
 
         circuit = self.var_form.construct_circuit(parameters)
 
-        if backend_description['package'] == 'qiskit' and 'statevector' not in backend_description['name']:
+        if ((backend_description['package'] == 'qiskit' and 'statevector' not in backend_description['name']) 
+                or (hasattr(self.var_form, '_measurement_circuit') and self.var_form._measurement_circuit is not None)):
             if not circuit.cregs:
                 c = qiskit.ClassicalRegister(self.num_qubits, name='c')
                 circuit.add_register(c)

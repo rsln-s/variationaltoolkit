@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import copy
 import logging
 from multiprocessing import Pool
 from functools import partial
@@ -7,6 +8,8 @@ from qiskit import IBMQ
 from qiskit import execute as qiskit_execute
 from qiskit.providers.aer.backends.aerbackend import AerBackend
 from qiskit.aqua.operators.op_converter import to_matrix_operator
+from qiskit.quantum_info import Pauli
+from qiskit.aqua.operators import WeightedPauliOperator
 
 from .endianness import get_adjusted_state, state_num2str
 
@@ -162,6 +165,7 @@ def solution_density(obj_f, num_variables):
             noptimal += 1
     return float(noptimal) / float(2**num_variables)
 
+
 def set_log_level(level):
     """
     Sets logging level for everything in variationaltoolkit
@@ -173,3 +177,65 @@ def set_log_level(level):
     for handler in root_logger.handlers:
         if isinstance(handler, type(logging.StreamHandler())):
             handler.setLevel(level)
+
+
+def check_if_a_point_is_a_local_min(obj_f, x_min, eps=1e-2, f_min_precomputed=None):
+    """
+    Checks if points in local_mins array are indeed local minima
+    by evaluating points eps away in each direction
+
+    Args:
+        obj_f (function): objective function 
+        x_min (numpy.array or list): point to check
+        eps (float): size of the step
+        f_min_precomputed (float): function value at x_min to check (optional): 
+                                   f_min_precomputed = obj_f(x_min)
+    """
+    f_min = obj_f(x_min)
+    if f_min_precomputed is not None:
+        assert(np.isclose(f_min, f_min_precomputed))
+    for i, x in enumerate(x_min):
+        x_eps = copy.deepcopy(x_min)
+        x_eps[i] -= eps
+        f_eps = obj_f(x_eps)
+        if(f_eps <= f_min):
+            return False
+        x_eps[i] += 2*eps
+        f_eps = obj_f(x_eps)
+        if(f_eps <= f_min):
+            return False
+    return True
+
+
+def mact(circuit, q_controls, q_target, ancilla):
+    """
+    Apply multiple anti-control Toffoli gate 
+
+    Args:
+        circuit (QuantumCircuit): The QuantumCircuit object to apply the mct gate on.
+        q_controls (QuantumRegister or list(Qubit)): The list of control qubits
+        q_target (Qubit): The target qubit
+        q_ancilla (QuantumRegister or list(Qubit)): The list of ancillary qubits
+    """
+    circuit.x(q_controls)
+    circuit.mct(q_controls, q_target[0], ancilla)
+    circuit.x(q_controls)
+    circuit.barrier()
+
+
+def get_max_independent_set_operator(num_nodes):
+    """
+    Contructs the cost operator for max independent set
+    1/2 \sum_i Z_i
+
+    Args:
+        num_nodes (int): Number of nodes
+    """
+    pauli_list = []
+    for i in range(num_nodes):
+        x_p = np.zeros(num_nodes, dtype=np.bool)
+        z_p = np.zeros(num_nodes, dtype=np.bool)
+        z_p[i] = True
+        pauli_list.append([0.5, Pauli(z_p, x_p)])
+    shift = -num_nodes/2
+    return WeightedPauliOperator(paulis=pauli_list), shift

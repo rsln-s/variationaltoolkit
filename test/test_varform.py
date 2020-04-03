@@ -1,10 +1,13 @@
 import unittest
 import numpy as np
+import networkx as nx
 import importlib.util
 import sys
+from itertools import product
 from variationaltoolkit import VarForm
+from variationaltoolkit.utils import mact, get_max_independent_set_operator
 from qiskit.aqua.components.variational_forms import RYRZ
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.circuit import Parameter
 from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
 
@@ -48,8 +51,13 @@ class TestVarForm(unittest.TestCase):
     def test_qaoa_mixer(self):
         w = np.array([[0,1,1,0],[1,0,1,1],[1,1,0,1],[0,1,1,0]])
         C, offset = get_maxcut_operator(w)
+
+        # build initial state circuit
+        initial_state_circuit = QuantumCircuit(4)
+        initial_state_circuit.u2(0, np.pi, range(4))
+
         var_form_operator_mix = VarForm(varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4})
-        var_form_circuit_mix = VarForm(varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4, 'use_mixer_circuit':True})
+        var_form_circuit_mix = VarForm(varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4, 'use_mixer_circuit':True, 'initial_state_circuit':initial_state_circuit})
 
         self.assertEqual(var_form_operator_mix.num_parameters, var_form_circuit_mix.num_parameters)
         parameters = np.random.uniform(0, np.pi, var_form_operator_mix.num_parameters)
@@ -68,6 +76,9 @@ class TestVarForm(unittest.TestCase):
         w = np.array([[0,1,1,0],[1,0,1,1],[1,1,0,1],[0,1,1,0]])
         C, offset = get_maxcut_operator(w)
         var_form_operator_mix = VarForm(varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4})
+        # build initial state circuit
+        initial_state_circuit = QuantumCircuit(4)
+        initial_state_circuit.u2(0, np.pi, range(4))
 
         # build transverse field mixer circuit
         mixer_circuit = QuantumCircuit(4)
@@ -77,7 +88,7 @@ class TestVarForm(unittest.TestCase):
             mixer_circuit.rz(2*beta, q1)
             mixer_circuit.h(q1)
         # pass it to variational form
-        var_form_circuit_mix = VarForm(varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4, 'use_mixer_circuit':True, 'mixer_circuit':mixer_circuit})
+        var_form_circuit_mix = VarForm(varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4, 'use_mixer_circuit':True, 'mixer_circuit':mixer_circuit, 'initial_state_circuit':initial_state_circuit})
 
         self.assertEqual(var_form_operator_mix.num_parameters, var_form_circuit_mix.num_parameters)
         parameters = np.random.uniform(0, np.pi, var_form_operator_mix.num_parameters)
@@ -90,6 +101,59 @@ class TestVarForm(unittest.TestCase):
         # check that the two statevectors are equal up to global phase 
         phase_diff = sv_circuit_mix / sv_operator_mix
         self.assertTrue(np.allclose(phase_diff, np.full(phase_diff.shape, phase_diff[0])))
+
+
+    def test_qaoa_max_independent_set(self):
+        elist = [[0,2],[0,4],[1,2],[1,4],[0,3],[1,3]]
+        G = nx.OrderedGraph()
+        G.add_edges_from(elist)
+        vertex_num = G.number_of_nodes()
+        w = nx.adjacency_matrix(G, nodelist=range(vertex_num))
+        C, offset = get_max_independent_set_operator(vertex_num)
+        # First, allocate registers
+        qu = QuantumRegister(vertex_num)
+        ancilla_for_multi_toffoli = QuantumRegister(vertex_num - 2)
+        ancilla_for_rx = QuantumRegister(1)
+        cu = ClassicalRegister(vertex_num)
+
+        # Mixer circuit
+        beta = Parameter('beta')
+        mixer_circuit = QuantumCircuit(qu, ancilla_for_multi_toffoli, ancilla_for_rx, cu)
+        for u in G.nodes():
+            mixer_circuit.barrier()
+            mact(mixer_circuit, list(qu[x] for x in G.neighbors(u)), ancilla_for_rx, ancilla_for_multi_toffoli)
+
+            mixer_circuit.mcrx(2 * beta, ancilla_for_rx, qu[u])
+            mixer_circuit.barrier()
+
+            mact(mixer_circuit, list(qu[x] for x in G.neighbors(u)), ancilla_for_rx, ancilla_for_multi_toffoli)
+        
+        # Measurement circuit 
+        measurement_circuit = QuantumCircuit(qu, ancilla_for_multi_toffoli, ancilla_for_rx, cu)
+        measurement_circuit.measure(qu, cu)
+
+        # pass it all to variational form
+        var_form_circuit_mix = VarForm(varform_description={
+            'name':'QAOA', 
+            'p':2, 
+            'cost_operator':C, 
+            'num_qubits':vertex_num, 'use_mixer_circuit':True, 
+            'mixer_circuit':mixer_circuit, 
+            'measurement_circuit': measurement_circuit, 
+            'qregs':[qu, ancilla_for_multi_toffoli, ancilla_for_rx, cu]})
+        parameters = np.random.uniform(0, np.pi, var_form_circuit_mix.num_parameters)
+        res = var_form_circuit_mix.run(parameters, 
+                backend_description={'package':'qiskit', 'provider':'Aer', 'name':'qasm_simulator'},
+                execute_parameters={'shots': 1000})
+        # check that all sampled strings are valid solutions
+        for x in res:
+            for i, j in product(set(np.where(reversed(x))[0]), repeat=2):
+                if i != j:
+                    try:
+                        self.assertTrue(not G.has_edge(i,j))
+                    except AssertionError as e:
+                        print(i,j,x)
+                        raise e
 
 
     @unittest.skipIf(skip_mpsbackend, "mpsbackend not found")
