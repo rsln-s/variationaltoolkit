@@ -12,7 +12,7 @@ The flowchart can be edited within draw.io. The source can be found at https://d
 ## Installation
 
 ```
-conda create --name quantum intelpython3_core python=3.6
+conda create --name quantum python=3.6
 conda activate quantum
 conda install numpy scipy cython ipython
 pip install qiskit
@@ -21,6 +21,9 @@ cd variationaltoolkit
 pip install -e .
 ```
 
+Using Intel distribution of Python is recommended, but not required. 
+To use intel Python, use this command when creating the environment: 
+`conda create --name quantum intelpython3_core python=3.6`
 
 ## Optional Requirements
 
