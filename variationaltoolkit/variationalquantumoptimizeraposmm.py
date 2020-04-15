@@ -66,14 +66,8 @@ class VariationalQuantumOptimizerAPOSMM(VariationalQuantumOptimizer):
                 self.exit_criteria = {'sim_max': _maxiter}
         else:
             # assume nlopt
-            if 'ftol_rel' in self.optimizer_parameters:
-                gen_specs_user['ftol_rel'] = self.optimizer_parameters['ftol_rel']
-            else:
-                gen_specs_user['ftol_rel'] = 1e-10
-            if 'xtol_rel' in self.optimizer_parameters:
-                gen_specs_user['xtol_rel'] = self.optimizer_parameters['xtol_rel']
-            else:
-                gen_specs_user['xtol_rel'] = 1e-10
+            if len(gen_specs_user) == 0:
+                raise ValueError(f"When using nlopt, gen_user_spec must specify tolerances")
             # Tell libEnsemble when to stop
             self.exit_criteria = {'sim_max': self.optimizer_parameters['maxiter']}
         self.gen_specs_user = gen_specs_user
