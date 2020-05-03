@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 from functools import partial
 from variationaltoolkit import VariationalQuantumOptimizer
-from variationaltoolkit.objectives import modularity_obj, bin_to_dec, compute_objective
+from variationaltoolkit.objectives import modularity_obj
 
 w = np.array([[0,1,1,0,0,0],[1,0,1,0,0,0],[1,1,0,1,0,0],[0,0,1,0,1,1],[0,0,0,1,0,1],[0,0,0,1,1,0]])
 G = nx.from_numpy_matrix(w)

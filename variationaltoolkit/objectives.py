@@ -43,12 +43,12 @@ def modularity_obj(x, N, G, node_list):
             ptn = bin_to_dec(x[node_dict[node]*N: (node_dict[node]+1)*N], N)
             ptn_variables[node] = ptn
 
-    obj = compute_objective(G, ptn_variables, N)
+    obj = compute_modularity_objective_helper(G, ptn_variables, N)
     
     return -obj
 
 
-def compute_objective(G, ptn_variables, N):
+def compute_modularity_objective_helper(G, ptn_variables, N):
 # helper function to compute modularity_obj
 
     parts = 2**N
