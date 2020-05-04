@@ -1,23 +1,21 @@
 import numpy as np
 import networkx as nx
 from functools import partial
-from variationaltoolkit import VariationalQuantumOptimizer
+from variationaltoolkit import VariationalQuantumOptimizerSequential
 from variationaltoolkit.objectives import modularity_obj
 
 w = np.array([[0,1,1,0,0,0],[1,0,1,0,0,0],[1,1,0,1,0,0],[0,0,1,0,1,1],[0,0,0,1,0,1],[0,0,0,1,1,0]])
 G = nx.from_numpy_matrix(w)
-for node in G.nodes():
-    G.nodes[node]['volume'] = G.degree[node]
-for u, v in G.edges():
-    G[u][v]['weight'] = 1
-node_list = list(G.nodes())
+B = nx.modularity_matrix(G, nodelist = list(range(6)))
+m = G.number_of_edges()
+
 varform_description = {'name':'RYRZ', 'num_qubits':6, 'depth':3, 'entanglement':'linear'}
 backend_description={'package':'mpsbackend'}
 execute_parameters={'shots':10000}
 optimizer_parameters={'maxiter':10}
-obj = partial(modularity_obj, N = 1, G = G, node_list = node_list)
+obj = partial(modularity_obj, N = 1, B = B, m = m)
     
-varopt = VariationalQuantumOptimizer(
+varopt = VariationalQuantumOptimizerSequential(
          obj, 
          'COBYLA', 
          optimizer_parameters=optimizer_parameters, 

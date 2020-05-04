@@ -1,5 +1,4 @@
 import numpy as np
-import networkx as nx
 
 """
 
@@ -19,60 +18,28 @@ def maxcut_obj(x,w):
     return -np.sum(w * X)
 
 
-def modularity_obj(x, N, G, node_list):
+def modularity_obj(x, N, B, m):
     """Compute -1 times the value of modularity.
     Args:
         x (numpy.ndarray): binary string as numpy array.
-        N: number of vars per node
-        G: graph(each node needs to have attribute 'volume', each edge needs to have attribute 'weight')
-        node_list: list of the nodes in the graph
+        N (int):           number of variables per node.
+        B (numpy.ndarray): modularity matrix.
+        m (int):           number of edges.
     Returns:
-        float: value of the modularity.
+        float: -1 times the value of the modularity.
     """
-    ptn_variables = {}
-    n = G.number_of_nodes()
-    node_dict = {node_list[i]: i for i in range(n)}
-    if 'Cluster0' in G:
-        for node in node_list[:n-2**N]:
-            ptn = bin_to_dec(x[node_dict[node]*N: (node_dict[node]+1)*N], N)
-            ptn_variables[node] = ptn
-        for i in range(2**N):
-            ptn_variables['Cluster'+str(i)] = i
-    else:
-        for node in node_list:
-            ptn = bin_to_dec(x[node_dict[node]*N: (node_dict[node]+1)*N], N)
-            ptn_variables[node] = ptn
-
-    obj = compute_modularity_objective_helper(G, ptn_variables, N)
-    
-    return -obj
-
-
-def compute_modularity_objective_helper(G, ptn_variables, N):
-# helper function to compute modularity_obj
-
-    parts = 2**N
-    ptn_properties = {i: {'sum_of_vols':0.0, 'edge_cut': 0.0} for i in range(parts)}
-    ptn_properties['total_edges'] = 0
-
-    for node in G.nodes():
-        part = ptn_variables[node]
-        ptn_properties[part]['sum_of_vols'] += G.nodes[node]['volume']
-        ptn_properties['total_edges'] += G.nodes[node]['volume']
-
-    for u, v in G.edges():
-        partu = ptn_variables[u]
-        partv = ptn_variables[v]
-        if partu != partv:
-            ptn_properties[partu]['edge_cut'] += G[u][v]['weight']
-            ptn_properties[partv]['edge_cut'] += G[u][v]['weight']
-
     obj = 0
-    for part in range(parts):
-        obj += (ptn_properties[part]['sum_of_vols'] - ptn_properties[part]['edge_cut']) / ptn_properties['total_edges']
-        obj -= (ptn_properties[part]['sum_of_vols'] / ptn_properties['total_edges']) ** 2
+    n = len(B)
+    y = {}
+    
+    for i in range(n):
+        y[i] = bin_to_dec(x[N*i: N*(i+1)], N)
+    for i in range(n):
+        for j in range(n):
+            obj += B.item(i, j) * (y[i] == y[j])
+            
+    return -obj/2/m
 
-    return obj
 
 def bin_to_dec(x, N):
 # helper function to compute modularity_obj
