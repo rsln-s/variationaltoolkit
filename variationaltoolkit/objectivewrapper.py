@@ -70,7 +70,7 @@ class ObjectiveWrapper:
             if self.backend_description['package'] == 'qiskit' and 'statevector' in self.backend_description['name']:
                 objective_value = obj_from_statevector(resstrs, self.obj, precomputed=self.precomputed_energies)
             else:
-                vals = [self.obj(x) for x in resstrs] 
+                vals = [self.obj(x[::-1]) for x in resstrs] # reverse because of qiskit notation 
                 if contains_and_raised(self.objective_parameters, 'save_vals'):
                     self.vals.append(vals)
 
