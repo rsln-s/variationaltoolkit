@@ -18,6 +18,25 @@ def maxcut_obj(x,w):
     return -np.sum(w * X)
 
 
+def modularity_energy(x, N, B, m, deg_list):
+    """Compute -1 times the value of energy in Lukasz's mps implementation.
+    Args:
+        x (numpy.ndarray): binary string as numpy array.
+        N (int):           number of variables per node.
+        B (numpy.ndarray): modularity matrix.
+        m (int):           number of edges.
+        deg_list (list):   list of the degree of each node
+    Returns:
+        float: -1 times the value of energy.
+    """
+    offset = 0
+    for i in range(len(deg_list)):
+        offset += deg_list[i] ** 2
+    offset = 3/4 * offset / m
+    
+    return modularity_obj(x, N, B, m) * 4 * m - offset
+
+
 def modularity_obj(x, N, B, m):
     """Compute -1 times the value of modularity.
     Args:
