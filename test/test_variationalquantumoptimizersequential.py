@@ -77,12 +77,9 @@ class TestVariationalQuantumOptimizerSequential(unittest.TestCase):
     def test_modularity(self):
         w = np.array([[0,1,1,0,0,0],[1,0,1,0,0,0],[1,1,0,1,0,0],[0,0,1,0,1,1],[0,0,0,1,0,1],[0,0,0,1,1,0]])
         G = nx.from_numpy_matrix(w)
-        for node in G.nodes():
-            G.nodes[node]['volume'] = G.degree[node]
-        for u, v in G.edges():
-            G[u][v]['weight'] = 1
-        node_list = list(G.nodes())
-        mod_obj = partial(modularity_obj, N = 1, G = G, node_list = node_list)
+        B = nx.modularity_matrix(G, nodelist = list(range(6)))
+        m = G.number_of_edges()
+        mod_obj = partial(modularity_obj, N = 1, B = B, m = m)
             
         varopt = VariationalQuantumOptimizerSequential(
                  mod_obj, 

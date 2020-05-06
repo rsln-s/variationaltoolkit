@@ -64,12 +64,12 @@ class ObjectiveWrapper:
         def f(theta):
             self.points.append(copy.deepcopy(theta))
             resstrs = self.var_form.run(theta, backend_description=self.backend_description, execute_parameters=self.execute_parameters)
+            if contains_and_raised(self.objective_parameters, 'save_resstrs'):
+                self.resstrs.append(resstrs)
+
             if self.backend_description['package'] == 'qiskit' and 'statevector' in self.backend_description['name']:
                 objective_value = obj_from_statevector(resstrs, self.obj, precomputed=self.precomputed_energies)
             else:
-                if contains_and_raised(self.objective_parameters, 'save_resstrs'):
-                    self.resstrs.append(resstrs)
-
                 vals = [self.obj(x) for x in resstrs] 
                 if contains_and_raised(self.objective_parameters, 'save_vals'):
                     self.vals.append(vals)
