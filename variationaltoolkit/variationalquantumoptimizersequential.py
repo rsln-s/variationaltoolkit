@@ -62,29 +62,3 @@ class VariationalQuantumOptimizerSequential(VariationalQuantumOptimizer):
 
         return self.res
 
-    def get_optimal_solution(self, shots=None, return_counts=False):
-        """Returns the result of re-running QAOA with optimal angles found previously
-
-        Args:
-            shots (int) : number of shots to use
-            return_counts (bool) : if raised, raw counts will be returned as well
-        """
-        final_execute_parameters = copy.deepcopy(self.execute_parameters)
-        if self.backend_description['package'] == 'qiskit' and 'statevector' in self.backend_description['name']:
-            sv = self.obj_w.var_form.run(self.res['opt_params'], backend_description=self.backend_description, execute_parameters=final_execute_parameters)
-            sv_adj = get_adjusted_state(sv)
-            counts = state_to_ampl_counts(sv_adj)
-            assert(np.isclose(sum(np.abs(v)**2 for v in counts.values()), 1))
-            objectives = [(self.obj(np.array([int(x) for x in k])), np.array([int(x) for x in k])) for k, v in counts.items() if (np.abs(v)**2) > 1e-5]
-        else:
-            if shots is not None:
-                final_execute_parameters['shots'] = shots
-            resstrs = self.obj_w.var_form.run(self.res['opt_params'], backend_description=self.backend_description, execute_parameters=final_execute_parameters)
-            if return_counts:
-                counts = Counter(''.join(str(i) for i in x) for x in resstrs)
-
-            objectives = [(self.obj(x), x) for x in resstrs]
-        if return_counts:
-            return min(objectives, key=itemgetter(0)), counts
-        else:
-            return min(objectives, key=itemgetter(0))

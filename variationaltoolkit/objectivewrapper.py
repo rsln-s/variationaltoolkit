@@ -55,7 +55,7 @@ class ObjectiveWrapper:
         self.vals = []
         self.points = []
         self.resstrs = []
-        self.is_periodic = False
+        self.is_periodic = True
 
 
     def get_obj(self):

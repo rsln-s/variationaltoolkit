@@ -45,6 +45,9 @@ class VariationalQuantumOptimizer(ABC):
                 check_cost_operator(varform_description['cost_operator'], obj, offset=offset)
         if contains_and_raised(problem_description, 'smooth_schedule'):
             self.obj_w = ObjectiveWrapperSmooth(obj, objective_parameters=objective_parameters, varform_description=varform_description, backend_description=backend_description, problem_description=problem_description, execute_parameters=execute_parameters)
+        elif contains_and_raised(objective_parameters, 'use_mpo_energy'):
+            from mpsbackend import ObjectiveWrapperMPOEnergy 
+            self.obj_w = ObjectiveWrapperMPOEnergy(obj, objective_parameters=objective_parameters, varform_description=varform_description, backend_description=backend_description, problem_description=problem_description, execute_parameters=execute_parameters)
         else:
             self.obj_w = ObjectiveWrapper(obj, objective_parameters=objective_parameters, varform_description=varform_description, backend_description=backend_description, problem_description=problem_description, execute_parameters=execute_parameters)
 
@@ -72,11 +75,16 @@ class VariationalQuantumOptimizer(ABC):
 
         return self.res
 
-    def get_optimal_solution(self, shots=None):
+
+    def get_optimal_solution(self, shots=None, return_counts=False):
+        """Returns the result of re-running QAOA with optimal angles found previously
+
+        Args:
+            shots (int) : number of shots to use
+            return_counts (bool) : if raised, raw counts will be returned as well
         """
-        TODO: should support running separately on device
-        Returns minimal(!!) energy string
-        """
+        if contains_and_raised(self.objective_parameters, 'use_mpo_energy'):
+            raise NotImplementedError("Getting optimal solution not supported for MPO energy")
         final_execute_parameters = copy.deepcopy(self.execute_parameters)
         if self.backend_description['package'] == 'qiskit' and 'statevector' in self.backend_description['name']:
             sv = self.obj_w.var_form.run(self.res['opt_params'], backend_description=self.backend_description, execute_parameters=final_execute_parameters)
@@ -88,6 +96,11 @@ class VariationalQuantumOptimizer(ABC):
             if shots is not None:
                 final_execute_parameters['shots'] = shots
             resstrs = self.obj_w.var_form.run(self.res['opt_params'], backend_description=self.backend_description, execute_parameters=final_execute_parameters)
+            if return_counts:
+                counts = Counter(''.join(str(i) for i in x) for x in resstrs)
 
             objectives = [(self.obj(x), x) for x in resstrs]
-        return min(objectives, key=itemgetter(0))
+        if return_counts:
+            return min(objectives, key=itemgetter(0)), counts
+        else:
+            return min(objectives, key=itemgetter(0))
