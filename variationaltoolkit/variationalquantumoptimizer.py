@@ -83,8 +83,6 @@ class VariationalQuantumOptimizer(ABC):
             shots (int) : number of shots to use
             return_counts (bool) : if raised, raw counts will be returned as well
         """
-        if contains_and_raised(self.objective_parameters, 'use_mpo_energy'):
-            raise NotImplementedError("Getting optimal solution not supported for MPO energy")
         final_execute_parameters = copy.deepcopy(self.execute_parameters)
         if self.backend_description['package'] == 'qiskit' and 'statevector' in self.backend_description['name']:
             sv = self.obj_w.var_form.run(self.res['opt_params'], backend_description=self.backend_description, execute_parameters=final_execute_parameters)
