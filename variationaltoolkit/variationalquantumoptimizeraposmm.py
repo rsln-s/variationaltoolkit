@@ -153,23 +153,3 @@ class VariationalQuantumOptimizerAPOSMM(VariationalQuantumOptimizer):
             self.res['H'] = H
             self.res['persis_info'] = persis_info
             return self.res
-
-    def get_optimal_solution(self, shots=None):
-        """
-        TODO: should support running separately on device
-        Returns minimal(!!) energy string
-        """
-        final_execute_parameters = copy.deepcopy(self.execute_parameters)
-        if self.backend_description['package'] == 'qiskit' and 'statevector' in self.backend_description['name']:
-            sv = self.obj_w.var_form.run(self.res['opt_params'], backend_description=self.backend_description, execute_parameters=final_execute_parameters)
-            sv_adj = get_adjusted_state(sv)
-            counts = state_to_ampl_counts(sv_adj)
-            assert(np.isclose(sum(np.abs(v)**2 for v in counts.values()), 1))
-            objectives = [(self.obj(np.array([int(x) for x in k])), np.array([int(x) for x in k])) for k, v in counts.items() if (np.abs(v)**2) > 1e-5]
-        else:
-            if shots is not None:
-                final_execute_parameters['shots'] = shots
-            resstrs = self.obj_w.var_form.run(self.res['opt_params'], backend_description=self.backend_description, execute_parameters=final_execute_parameters)
-
-            objectives = [(self.obj(x), x) for x in resstrs]
-        return min(objectives, key=itemgetter(0))

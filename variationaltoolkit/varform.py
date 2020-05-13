@@ -5,7 +5,8 @@ import numpy as np
 # a recipe for conditional import from https://docs.python.org/3/library/importlib.html#checking-if-a-module-can-be-imported
 _spec = importlib.util.find_spec('mpsbackend')
 if 'mpsbackend' in sys.modules:
-    raise RuntimeError("mpsbackend already in sys.modules. This means that someone imported mpsbackend before, braking the encapsulation. This should not happen.")
+    #raise RuntimeError("mpsbackend already in sys.modules. This means that someone imported mpsbackend before, braking the encapsulation. This should not happen.")
+    pass
 elif _spec is not None:
     # If you chose to perform the actual import ...
     _module = importlib.util.module_from_spec(_spec)
