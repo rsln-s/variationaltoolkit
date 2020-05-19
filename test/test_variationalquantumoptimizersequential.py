@@ -167,6 +167,24 @@ class TestVariationalQuantumOptimizerSequential(unittest.TestCase):
         res = varopt.get_optimal_solution(shots=10000)
         self.assertTrue(np.array_equal(res[1], np.array([0,0,0,1,1,1])) or np.array_equal(res[1], np.array([1,1,1,0,0,0])))
     
+    def test_modularity_sv(self):
+        w = np.array([[0,1,1,0,0,0],[1,0,1,0,0,0],[1,1,0,1,0,0],[0,0,1,0,1,1],[0,0,0,1,0,1],[0,0,0,1,1,0]])
+        G = nx.from_numpy_matrix(w)
+        B = nx.modularity_matrix(G, nodelist = list(range(6)))
+        m = G.number_of_edges()
+        mod_obj = partial(modularity_obj, N = 1, B = B, m = m)
+            
+        varopt = VariationalQuantumOptimizerSequential(
+                 mod_obj, 
+                 'SequentialOptimizer', 
+                optimizer_parameters=self.optimizer_parameters, 
+                varform_description={'name':'RYRZ', 'num_qubits':6, 'depth':3, 'entanglement':'linear'}, 
+                backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
+                execute_parameters=self.execute_parameters)
+        varopt.optimize()
+        res = varopt.get_optimal_solution(shots=10000)
+        self.assertTrue(np.array_equal(res[1], np.array([0,0,0,1,1,1])) or np.array_equal(res[1], np.array([1,1,1,0,0,0])))
+    
     def test_maxcut_qaoa(self):
         import logging; logging.disable(logging.CRITICAL)
         C, offset = get_maxcut_operator(self.w)

@@ -97,7 +97,7 @@ class VariationalQuantumOptimizer(ABC):
             if return_counts:
                 counts = Counter(''.join(str(i) for i in x) for x in resstrs)
 
-            objectives = [(self.obj(x), x) for x in resstrs]
+            objectives = [(self.obj(x[::-1]), x) for x in resstrs]
         if return_counts:
             return min(objectives, key=itemgetter(0)), counts
         else:
