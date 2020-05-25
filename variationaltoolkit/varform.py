@@ -20,6 +20,7 @@ import qiskit
 import qiskit.aqua.components.variational_forms as qiskit_variational_forms
 from qiskit.aqua.algorithms.adaptive.qaoa.var_form import QAOAVarForm
 from variationaltoolkit.variational_forms import QAOACircuitMixer
+from variationaltoolkit.variational_forms import QAOACircuitMixerQAOAPlus
 from .utils import execute_wrapper, check_and_load_accounts, contains_and_raised
 
 class VarForm:
@@ -49,9 +50,14 @@ class VarForm:
             if contains_and_raised(varform_description, 'use_mixer_circuit'):
                 varform_parameters = {k : v for k,v in varform_description.items() if k != 'name' and k != 'num_qubits' and k != 'use_mixer_circuit'}
                 self.var_form = QAOACircuitMixer(**varform_parameters)
+            elif contains_and_raised(varform_description, 'use_mixer_qaoaplus'):
+                varform_parameters = {k : v for k,v in varform_description.items() if k != 'name' and k != 'num_qubits' and k != 'use_mixer_qaoaplus'}
+                self.var_form = QAOACircuitMixerQAOAPlus(**varform_parameters)
             else:
                 varform_parameters = {k : v for k,v in varform_description.items() if k != 'name' and k != 'num_qubits'}
                 self.var_form = QAOAVarForm(**varform_parameters)
+                
+            
         else:
             varform_parameters = {k : v for k,v in varform_description.items() if k != 'name'}
             self.var_form = getattr(qiskit_variational_forms, varform_description['name'])(**varform_parameters)

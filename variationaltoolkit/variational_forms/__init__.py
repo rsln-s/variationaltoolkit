@@ -1,2 +1,3 @@
 
 from .qaoacircuitmixer import QAOACircuitMixer
+from .qaoacircuitmixerqaoaplus import QAOACircuitMixerQAOAPlus
