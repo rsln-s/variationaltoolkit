@@ -3,6 +3,7 @@ import logging
 import copy
 from operator import itemgetter
 from abc import ABC, abstractmethod
+from collections import Counter
 import variationaltoolkit.optimizers as vt_optimizers
 import qiskit.aqua.components.optimizers as qiskit_optimizers
 from .objectivewrapper import ObjectiveWrapper
