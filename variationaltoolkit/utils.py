@@ -141,7 +141,10 @@ def brute_force(obj_f, num_variables):
     best_cost_brute = 0
     for b in range(2**num_variables):
         x = [int(t) for t in reversed(list(bin(b)[2:].zfill(num_variables)))]
-        cost = obj_f(x)
+        try:
+            cost = obj_f(x)
+        except TypeError:
+            cost = obj_f(np.array(x))
         if cost < best_cost_brute:
             best_cost_brute = cost
             xbest_brute = x

@@ -66,14 +66,8 @@ class VariationalQuantumOptimizerAPOSMM(VariationalQuantumOptimizer):
                 self.exit_criteria = {'sim_max': _maxiter}
         else:
             # assume nlopt
-            if 'ftol_rel' in self.optimizer_parameters:
-                gen_specs_user['ftol_rel'] = self.optimizer_parameters['ftol_rel']
-            else:
-                gen_specs_user['ftol_rel'] = 1e-10
-            if 'xtol_rel' in self.optimizer_parameters:
-                gen_specs_user['xtol_rel'] = self.optimizer_parameters['xtol_rel']
-            else:
-                gen_specs_user['xtol_rel'] = 1e-10
+            if len(gen_specs_user) == 0:
+                raise ValueError(f"When using nlopt, gen_user_spec must specify tolerances")
             # Tell libEnsemble when to stop
             self.exit_criteria = {'sim_max': self.optimizer_parameters['maxiter']}
         self.gen_specs_user = gen_specs_user
@@ -159,23 +153,3 @@ class VariationalQuantumOptimizerAPOSMM(VariationalQuantumOptimizer):
             self.res['H'] = H
             self.res['persis_info'] = persis_info
             return self.res
-
-    def get_optimal_solution(self, shots=None):
-        """
-        TODO: should support running separately on device
-        Returns minimal(!!) energy string
-        """
-        final_execute_parameters = copy.deepcopy(self.execute_parameters)
-        if self.backend_description['package'] == 'qiskit' and 'statevector' in self.backend_description['name']:
-            sv = self.obj_w.var_form.run(self.res['opt_params'], backend_description=self.backend_description, execute_parameters=final_execute_parameters)
-            sv_adj = get_adjusted_state(sv)
-            counts = state_to_ampl_counts(sv_adj)
-            assert(np.isclose(sum(np.abs(v)**2 for v in counts.values()), 1))
-            objectives = [(self.obj(np.array([int(x) for x in k])), np.array([int(x) for x in k])) for k, v in counts.items() if (np.abs(v)**2) > 1e-5]
-        else:
-            if shots is not None:
-                final_execute_parameters['shots'] = shots
-            resstrs = self.obj_w.var_form.run(self.res['opt_params'], backend_description=self.backend_description, execute_parameters=final_execute_parameters)
-
-            objectives = [(self.obj(x), x) for x in resstrs]
-        return min(objectives, key=itemgetter(0))
