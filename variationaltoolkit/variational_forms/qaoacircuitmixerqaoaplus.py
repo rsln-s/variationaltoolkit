@@ -28,6 +28,7 @@ from qiskit.circuit import Parameter
 
 from qiskit.aqua.operators import WeightedPauliOperator, op_converter
 from qiskit.aqua.components.variational_forms import VariationalForm
+from qiskit.compiler import transpile
 
 # pylint: disable=invalid-name
 
@@ -122,6 +123,10 @@ class QAOACircuitMixerQAOAPlus(VariationalForm):
             circuit += self._mixer_circuit.bind_parameters({beta_parameter: beta})
         if self._measurement_circuit is not None:
             circuit += self._measurement_circuit
+            
+        # print(circuit.count_ops())
+        # circuit_for_gate_count = transpile(circuit, basis_gates=['u1', 'u2', 'u3', 'cx'])
+        # print(circuit_for_gate_count.count_ops())
         return circuit
 
     @property
