@@ -153,7 +153,8 @@ def stuart_compute_energy_avg(p, G, initial_state_string=''):
             feasible_count += v
         total_count += v
     
-    assert feasible_count == total_count, "all output need to be independent set, something wrong here"
+    if feasible_count != total_count:
+        raise ValueError(f"Encountered {total_count - feasible_count} samples that are not independent sets")
     # print(feasible_count)
     # print(total_count)
     energy_feasible /= feasible_count
