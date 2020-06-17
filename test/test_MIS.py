@@ -9,7 +9,7 @@
 # K3,2 p = 1, see if 00111 state prob > 85%
 # K5,5 p = 1, see if 0000011111 state prob > 95%
 
-from variationaltoolkit.stuartansatzfunctions import stuart_one_run, stuart_compute_energy_avg, stuart_compute_energy_average_min
+from variationaltoolkit.stuart_mis_utils.stuartansatzfunctions import stuart_one_run, stuart_compute_energy_avg, stuart_compute_energy_average_min
 
 import unittest
 import numpy as np
@@ -109,6 +109,20 @@ class TestMIS(unittest.TestCase):
         counts = stuart_one_run(1, G)
         self.assertTrue((counts['0000011111'] / sum(counts.values())) > 0.95)
             
+    
+    """
+    Edge case: K2,3 with one isolated node
+    """
+    def test_stuart_ansatz_isolated_node(self):
+        import networkx as nx
+        elist = [[0,2],[0,3],[0,4],[1,2],[1,3],[1,4]]
+        G = nx.OrderedGraph()
+        G.add_edges_from(elist)
+        G.add_node(5)
+        
+        counts = stuart_one_run(1, G)
+        self.assertTrue((counts['100011'] / sum(counts.values())) > 0.85)
+        
         
 if __name__ == '__main__':
     unittest.main()
