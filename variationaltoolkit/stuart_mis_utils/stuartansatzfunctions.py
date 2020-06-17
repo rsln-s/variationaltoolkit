@@ -24,7 +24,7 @@ Returns
 counts: the dictionary that shows the final quantum state outputs
 """
 
-def stuart_one_run(p, G, initial_state_string='', print_out_res=False, optimizer='COBYLA'):
+def stuart_one_run(p, G, initial_state_string='', print_out_res=False, return_optimum=False, optimizer='COBYLA'):
     vertex_num = G.number_of_nodes()
     
     def obj(x):
@@ -49,20 +49,18 @@ def stuart_one_run(p, G, initial_state_string='', print_out_res=False, optimizer
         
     mixer_circuit = QuantumCircuit(qu, ancilla_for_multi_toffoli, ancilla_for_rx, cu)
     
-    # toffoli_gate_count = 0 # count the multi-control toffoli gates
-    
     for u in G.nodes():
-        mixer_circuit.barrier()
-        mact(mixer_circuit, list(qu[x] for x in G.neighbors(u)), ancilla_for_rx, ancilla_for_multi_toffoli)
+        neighbor_list = list(G.neighbors(u))
+        if not neighbor_list:
+            mixer_circuit.rx(2 * beta, qu[u])
+        else:
+            mixer_circuit.barrier()
+            mact(mixer_circuit, list(qu[x] for x in G.neighbors(u)), ancilla_for_rx, ancilla_for_multi_toffoli)
 
-        mixer_circuit.mcrx(2 * beta, ancilla_for_rx, qu[u])
-        mixer_circuit.barrier()
+            mixer_circuit.mcrx(2 * beta, ancilla_for_rx, qu[u])
+            mixer_circuit.barrier()
 
-        mact(mixer_circuit, list(qu[x] for x in G.neighbors(u)), ancilla_for_rx, ancilla_for_multi_toffoli)
-        # toffoli_gate_count += 2
-
-        # print('toffoli_gate_count = ')
-        # print(toffoli_gate_count)
+            mact(mixer_circuit, list(qu[x] for x in G.neighbors(u)), ancilla_for_rx, ancilla_for_multi_toffoli)
 
     # Measurement circuit
     measurement_circuit = QuantumCircuit(qu, ancilla_for_multi_toffoli, ancilla_for_rx, cu)
@@ -81,7 +79,6 @@ def stuart_one_run(p, G, initial_state_string='', print_out_res=False, optimizer
         actual_i = len(initial_state) - 1 - i
         if current_state == '1':
             initial_state_circuit.x(actual_i)
-    # print(initial_state_circuit)
 
     initial_point = np.zeros(2 * p)
 
@@ -111,7 +108,10 @@ def stuart_one_run(p, G, initial_state_string='', print_out_res=False, optimizer
         print(res)
     optimum, counts = varopt.get_optimal_solution(return_counts=True)
     print(f"Found optimal solution: {optimum}")
-    return counts
+    if return_optimum == True:
+        return optimum, counts
+    else:
+        return counts
 
 
 """
@@ -155,10 +155,8 @@ def stuart_compute_energy_avg(p, G, initial_state_string=''):
     
     if feasible_count != total_count:
         raise ValueError(f"Encountered {total_count - feasible_count} samples that are not independent sets")
-    # print(feasible_count)
-    # print(total_count)
+        
     energy_feasible /= feasible_count
-    print("the energy of the solution is: " + str(energy_feasible))
     return energy_feasible
 
 
@@ -177,7 +175,7 @@ Returns
 energy_avg: the computed energy average
 energy_min: the computed energy min
 """
-def stuart_compute_energy_average_min(p, num_experiment_iter, G, initial_state_string=''):
+def stuart_compute_energy_average_min(p, num_experiment_iter, G, initial_state_string='', print_min_average = False):
     energy_avg = 0
     energy_min = 0
     for i in range(num_experiment_iter):
@@ -187,6 +185,7 @@ def stuart_compute_energy_average_min(p, num_experiment_iter, G, initial_state_s
         if current_energy < energy_min:
             energy_min = current_energy
     energy_avg /= num_experiment_iter
-    print('the average energy is : ' + str(energy_avg))
-    print('the mininum energy is : ' + str(energy_min))
+    if print_min_average == True:
+        print('the average energy is : ' + str(energy_avg))
+        print('the mininum energy is : ' + str(energy_min))
     return energy_avg, energy_min
