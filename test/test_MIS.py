@@ -94,7 +94,7 @@ class TestMIS(unittest.TestCase):
         G.add_edges_from(elist)
         
         counts = stuart_one_run(1, G)
-        self.assertTrue((counts_2['11100'] / sum(counts.values())) > 0.85)
+        self.assertTrue((counts['00111'] / sum(counts.values())) > 0.85)
         
     
     """
