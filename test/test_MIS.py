@@ -32,9 +32,6 @@ skip_mpsbackend = ('mpsbackend' not in sys.modules) and (_mpsspec is None)
 
 class TestMIS(unittest.TestCase):
 
-    def setUp(self):
-        print("maybe code up something here?")
-
         
     """
     K2,3 p = 1, see if 00011 state prob > 85%

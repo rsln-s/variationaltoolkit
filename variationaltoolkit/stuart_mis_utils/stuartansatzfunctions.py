@@ -89,7 +89,7 @@ def stuart_one_run(p, G, initial_state_string='', print_out_res=False, return_op
         initial_point=None,
         optimizer_parameters={'maxiter':1000},
         backend_description={'package':'qiskit', 'provider':'Aer', 'name':'qasm_simulator'},
-        problem_description={'offset': offset},
+        problem_description={'offset': offset, 'do_not_check_cost_operator':True},
         varform_description={
             'name':'QAOA',
             'p':p,
@@ -98,7 +98,7 @@ def stuart_one_run(p, G, initial_state_string='', print_out_res=False, return_op
             'mixer_circuit':mixer_circuit,
             'measurement_circuit': measurement_circuit,
             'initial_state_circuit':initial_state_circuit,
-            'qregs':[qu, ancilla_for_multi_toffoli, ancilla_for_rx, cu]
+            'qregs':[qu, ancilla_for_multi_toffoli, ancilla_for_rx, cu],
         },
         execute_parameters={'shots': 5000}
         )
