@@ -100,7 +100,7 @@ def qaoaplus_one_run(p, G, initial_state_string='', print_out_res=False):
 
 
 """
-The function that perform one run of the QAOAplus
+The function that compute the average energy after pruning, also record total number of feasible solutions
 
 Parameters
 ----------
@@ -110,24 +110,25 @@ initial_state_string: a string of initial state, default is ''
 
 Returns
 -------
-counts: the dictionary that shows the final quantum state outputs
+energy_feasible: the average energy after pruning
 """
 def qaoaplus_compute_energy_avg_with_pruning(p, G, initial_state_string=''):
     def mis_obj(x, G):
         obj = -sum(x)
         return obj
-
-    from qiskit.tools.visualization import plot_histogram
-    counts = qaoaplus_one_run(p, G, initial_state_string)
+    
+    # define the function that check if a string solution is an independent set
     def is_independent_set(x, G):
         for i, j in G.edges():
             if x[i]*x[j] == 1:
                  return False
         return True
     # is_feasible = partial(is_independent_set, G=G)
+    
     energy_feasible = 0
     feasible_count = 0
     total_count = 0
+    counts = qaoaplus_one_run(p, G, initial_state_string)
     for k,v in counts.items():
         k_string_array = np.array([int(i) for i in k])
         # invert the string order
@@ -137,6 +138,7 @@ def qaoaplus_compute_energy_avg_with_pruning(p, G, initial_state_string=''):
             feasible_count += v
         total_count += v
     energy_feasible /= feasible_count
+    
     print("the energy of the solution is " + str(energy_feasible))
     print('feasible solution percetage ratio is')
     print(str(feasible_count / total_count * 100) + '%')
@@ -146,7 +148,7 @@ def qaoaplus_compute_energy_avg_with_pruning(p, G, initial_state_string=''):
 
 
 """
-The function that gives the energy average and mininum for one run of the MIS QAOA using Stuart's ansatz
+The function that gives the energy average and mininum for many runs of the MIS QAOA+
 
 Parameters
 ----------
