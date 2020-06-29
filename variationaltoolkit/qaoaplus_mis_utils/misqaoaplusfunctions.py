@@ -77,7 +77,7 @@ def qaoaplus_one_run(p, G, initial_state_string='', print_out_res=False):
         initial_point=None,
         optimizer_parameters={'maxiter':1000},
         backend_description={'package':'qiskit', 'provider':'Aer', 'name':'qasm_simulator'},
-        problem_description={'offset': offset},
+        problem_description={'offset': offset, 'do_not_check_cost_operator':True},
         varform_description={
             'name':'QAOA',
             'p':p,
