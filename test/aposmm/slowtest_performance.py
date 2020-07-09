@@ -4,7 +4,7 @@ import numpy as np
 import networkx as nx
 import pickle
 from functools import partial
-from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
+from qiskit.optimization.applications.ising.max_cut import get_operator as get_maxcut_operator
 import scipy
 from variationaltoolkit import VariationalQuantumOptimizerAPOSMM
 from variationaltoolkit import VariationalQuantumOptimizerSequential

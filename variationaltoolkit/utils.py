@@ -7,7 +7,7 @@ from functools import partial
 from qiskit import IBMQ
 from qiskit import execute as qiskit_execute
 from qiskit.providers.aer.backends.aerbackend import AerBackend
-from qiskit.aqua.operators.op_converter import to_matrix_operator
+from qiskit.quantum_info.operators import Operator
 from qiskit.quantum_info import Pauli
 from qiskit.aqua.operators import WeightedPauliOperator
 
@@ -92,7 +92,7 @@ def cost_operator_to_vec(C, offset=0):
     it into a vector of length N of just the diagonal 
     elements. Verifies that C is real and diagonal.
     """
-    C_mat = to_matrix_operator(C)
+    C_mat = C.to_opflow().to_matrix_op().to_legacy_op()
     m = C_mat.dense_matrix
     m_diag = np.zeros(m.shape[0])
     assert(m.shape[0] == m.shape[1])

@@ -2,7 +2,7 @@ import numpy as np
 import os
 import networkx as nx
 from functools import partial
-from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
+from qiskit.optimization.applications.ising.max_cut import get_operator as get_maxcut_operator
 from variationaltoolkit.objectives import maxcut_obj, modularity_obj
 from variationaltoolkit import VariationalQuantumOptimizerAPOSMM
 

@@ -4,7 +4,7 @@ import networkx as nx
 import time
 from functools import partial
 from qiskit import QuantumCircuit, Aer, execute
-from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
+from qiskit.optimization.applications.ising.max_cut import get_operator as get_maxcut_operator
 from variationaltoolkit.utils import obj_from_statevector, precompute_obj, cost_operator_to_vec, solution_density, get_max_independent_set_operator, check_cost_operator
 from variationaltoolkit.objectives import maxcut_obj
 from variationaltoolkit.endianness import state_num2str
