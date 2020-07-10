@@ -25,7 +25,7 @@ import numpy as np
 from qiskit import QuantumRegister, QuantumCircuit
 from qiskit.quantum_info import Pauli
 from qiskit.circuit import Parameter
-
+from qiskit.aqua.operators import EvolutionFactory
 from qiskit.aqua.operators import WeightedPauliOperator, op_converter
 from qiskit.aqua.components.variational_forms import VariationalForm
 
@@ -61,7 +61,6 @@ class QAOACircuitMixer(VariationalForm):
             TypeError: invalid input
         """
         super().__init__()
-        cost_operator = op_converter.to_weighted_pauli_operator(cost_operator)
         self._cost_operator = cost_operator
         self._num_qubits = cost_operator.num_qubits
         self._p = p
@@ -105,15 +104,15 @@ class QAOACircuitMixer(VariationalForm):
             self.qregs = [QuantumRegister(self._num_qubits, name='q')]
         circuit = QuantumCircuit(*self.qregs)
         if self._initial_state_circuit is not None:
-            circuit += self._initial_state_circuit
-
+            circuit = circuit.compose(init_state)
         for idx in range(self._p):
             beta, gamma = angles[idx], angles[idx + self._p]
-            circuit += self._cost_operator.evolve(
-                evo_time=gamma, num_time_slices=1, quantum_registers=self.qregs[0]
-            )
+            circuit = (self._cost_operator * beta).exp_i().compose(circuit)
+            circuit = (self._mixer_circuit * gamma).exp_i().compose(circuit)
             beta_parameter = self._mixer_circuit.parameters.pop() # checked in constructor that there's only one parameter
             circuit += self._mixer_circuit.bind_parameters({beta_parameter: beta})
+        evolution = EvolutionFactor.build(self._cost_operator)
+        circuit = evolution.convert(circuit)
         if self._measurement_circuit is not None:
             circuit += self._measurement_circuit
         return circuit

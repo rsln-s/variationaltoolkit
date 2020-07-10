@@ -38,7 +38,6 @@ class TestVarForm(unittest.TestCase):
     def test_qaoa_maxcut(self):
         w = np.array([[0,1,1,0],[1,0,1,1],[1,1,0,1],[0,1,1,0]])
         C, offset = get_maxcut_operator(w)
-        C = C.to_opflow().to_pauli_op()
         var_form = VarForm(varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4})
         parameters = np.random.uniform(0, np.pi, var_form.num_parameters)
         execute_parameters={'shots':100}
@@ -52,11 +51,6 @@ class TestVarForm(unittest.TestCase):
     def test_qaoa_mixer(self):
         w = np.array([[0,1,1,0],[1,0,1,1],[1,1,0,1],[0,1,1,0]])
         C, offset = get_maxcut_operator(w)
-        print(type(C))
-        C = C.to_opflow()
-        print(type(C))
-        C = C.to_pauli_op()
-        print(type(C))
         # build initial state circuit
         initial_state_circuit = QuantumCircuit(4)
         initial_state_circuit.u2(0, np.pi, range(4))
@@ -80,7 +74,6 @@ class TestVarForm(unittest.TestCase):
     def test_qaoa_pass_mixer(self):
         w = np.array([[0,1,1,0],[1,0,1,1],[1,1,0,1],[0,1,1,0]])
         C, offset = get_maxcut_operator(w)
-        C = C.to_opflow().to_pauli_op()
         var_form_operator_mix = VarForm(varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4})
         # build initial state circuit
         initial_state_circuit = QuantumCircuit(4)
@@ -116,7 +109,6 @@ class TestVarForm(unittest.TestCase):
         vertex_num = G.number_of_nodes()
         w = nx.adjacency_matrix(G, nodelist=range(vertex_num))
         C, offset = get_max_independent_set_operator(vertex_num)
-        C = C.to_opflow().to_pauli_op()
         # First, allocate registers
         qu = QuantumRegister(vertex_num)
         ancilla_for_multi_toffoli = QuantumRegister(vertex_num - 2)

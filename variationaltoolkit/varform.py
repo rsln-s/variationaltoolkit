@@ -21,6 +21,7 @@ import qiskit
 import qiskit.aqua.components.variational_forms as qiskit_variational_forms
 from qiskit.aqua.algorithms.minimum_eigen_solvers.qaoa.var_form import QAOAVarForm
 from variationaltoolkit.variational_forms import QAOACircuitMixer
+from qiskit.aqua.operators import OperatorBase, LegacyBaseOperator
 from .utils import execute_wrapper, check_and_load_accounts, contains_and_raised
 
 class VarForm:
@@ -46,6 +47,10 @@ class VarForm:
     
 
         self.num_qubits = varform_description['num_qubits']
+        
+        if 'cost_operator' in varform_description and isinstance(varform_description['cost_operator'], LegacyBaseOperator):
+            varform_description['cost_operator'] = varform_description['cost_operator'].to_opflow()
+        
         if varform_description['name'] == 'QAOA':
             if contains_and_raised(varform_description, 'use_mixer_circuit'):
                 varform_parameters = {k : v for k,v in varform_description.items() if k != 'name' and k != 'num_qubits' and k != 'use_mixer_circuit'}

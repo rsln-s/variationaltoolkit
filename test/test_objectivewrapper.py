@@ -25,7 +25,6 @@ class TestObjectiveWrapper(unittest.TestCase):
         self.w = np.array([[0,1,1,0],[1,0,1,1],[1,1,0,1],[0,1,1,0]])
         self.obj = partial(maxcut_obj, w=self.w) 
         self.C, _ = get_maxcut_operator(self.w)
-        self.C = self.C.to_opflow().to_pauli_op()
 
 
     @unittest.skipIf(skip_mpsbackend, "mpsbackend not found")
@@ -102,7 +101,6 @@ class TestObjectiveWrapper(unittest.TestCase):
         w = nx.adjacency_matrix(G, nodelist=range(4)).toarray()
         obj = partial(maxcut_obj,w=w)
         C, _ = get_maxcut_operator(w)
-        C = C.to_opflow().to_pauli_op()
         obj_sv = ObjectiveWrapper(obj, 
                 varform_description={'name':'QAOA', 'p':10, 'num_qubits':4, 'cost_operator':C}, 
                 backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
@@ -146,7 +144,6 @@ class TestObjectiveWrapper(unittest.TestCase):
         w = nx.adjacency_matrix(G, nodelist=range(10)).toarray()
         obj = partial(maxcut_obj,w=w)
         C, _ = get_maxcut_operator(w)
-        C = C.to_opflow().to_pauli_op()
         brute_force_opt_imported, _ = brute_force(obj, G.number_of_nodes())
         brute_force_opt_custom, _ = brute_force(obj_f_cut, G.number_of_nodes())
         self.assertEqual(brute_force_opt_imported, brute_force_opt_custom)
