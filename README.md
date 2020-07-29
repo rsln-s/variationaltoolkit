@@ -1,6 +1,6 @@
 # variationaltoolkit -- A Toolkit For Near-Term Quantum  
 
-This is a set of tools that wrap up variational forms for optimization and more.
+This is a set of tools that wrap up variational forms for optimization and more. Current version relies on Qiskit 0.15.0.
 
 ## Package Overview
 ![Flowchart](/images/HighLevelVariationalToolkit.png)
@@ -15,7 +15,7 @@ The flowchart can be edited within draw.io. The source can be found at https://d
 conda create --name quantum python=3.6
 conda activate quantum
 conda install numpy scipy cython ipython
-pip install qiskit
+pip install qiskit==0.15.0
 git clone git@github.com:rsln-s/variationaltoolkit.git
 cd variationaltoolkit
 pip install -e .
