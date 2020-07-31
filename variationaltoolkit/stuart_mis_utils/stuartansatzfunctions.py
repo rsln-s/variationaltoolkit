@@ -24,7 +24,7 @@ Returns
 counts: the dictionary that shows the final quantum state outputs
 """
 
-def stuart_one_run(p, G, initial_state_string='', print_out_res=False, return_optimum=False, optimizer='COBYLA'):
+def stuart_one_run(p, G, initial_state_string='', initial_state_variation='all_zero', print_out_res=False, return_optimum=False, optimizer='COBYLA'):
     vertex_num = G.number_of_nodes()
     
     def obj(x):
@@ -67,20 +67,39 @@ def stuart_one_run(p, G, initial_state_string='', print_out_res=False, return_op
     measurement_circuit.measure(qu, cu)
 
 
-    # Initial state circuit
+    # manually set up the initial state circuit
+    initial_state_circuit = QuantumCircuit(vertex_num)
+    
     assert isinstance(initial_state_string, str), "need to pass the initial state as a string"
     if initial_state_string != '':
         assert len(initial_state_string) == vertex_num, "string length need to equal the number of nodes"
     initial_state = initial_state_string
-    initial_state_circuit = QuantumCircuit(qu)
     for i in range(len(initial_state)):
         current_state = initial_state[i]
         # Qiskit is doing in reverse order. For the first number in the initial_state, it means the last qubit
         actual_i = len(initial_state) - 1 - i
         if current_state == '1':
             initial_state_circuit.x(actual_i)
+            
+    if initial_state_variation == 'w_state':
+        for i in range(1, vertex_num):
+            initial_state_circuit.cx(0, i)
+            initial_state_circuit.x(i)
+            initial_state_circuit.ry(np.arcsin(1 / ((vertex_num + 1 - i) ** (1/2))), 0)
+            initial_state_circuit.cx(i, 0)
+            initial_state_circuit.ry(-np.arcsin(1 / ((vertex_num + 1 - i) ** (1/2))), 0)
+            initial_state_circuit.x(i)
+            initial_state_circuit.cx(0, i)
 
-    initial_point = np.zeros(2 * p)
+            initial_state_circuit.x(0) # This is not covered in the paper
+            initial_state_circuit.x(i) # This is not covered in the paper
+            if i > 1:
+                initial_state_circuit.swap(0, i) # This is not covered in the paper
+
+        initial_state_circuit.x(0) # flip back the first qubit
+    
+    print(initial_state_circuit)
+
 
     # pass it all to VariationalQuantumOptimizer
     varopt = VariationalQuantumOptimizerSequential(

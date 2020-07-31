@@ -23,7 +23,7 @@ Returns
 -------
 counts: the dictionary that shows the final quantum state outputs
 """
-def qaoaplus_one_run(p, G, initial_state_string='', print_out_res=False):
+def qaoaplus_one_run(p, G, initial_state_string='', initial_state_variation='all_zero', print_out_res=False):
     import logging
     from variationaltoolkit.utils import set_log_level
     # set_log_level(logging.INFO)
@@ -57,17 +57,40 @@ def qaoaplus_one_run(p, G, initial_state_string='', print_out_res=False):
     # print()
 
     # manually set up the initial state circuit
+    initial_state_circuit = QuantumCircuit(vertex_num)
+    
     assert isinstance(initial_state_string, str), "need to pass the initial state as a string"
     if initial_state_string != '':
         assert len(initial_state_string) == vertex_num, "string length need to equal the number of nodes"
     initial_state = initial_state_string
-    initial_state_circuit = QuantumCircuit(vertex_num)
     for i in range(len(initial_state)):
         current_state = initial_state[i]
         # Qiskit is doing in reverse order. For the first number in the initial_state, it means the last qubit
         actual_i = len(initial_state) - 1 - i
         if current_state == '1':
             initial_state_circuit.x(actual_i)
+    
+    if initial_state_variation == 'all_hadamard':
+        for i in range(vertex_num):
+            initial_state_circuit.h(i)
+            
+    if initial_state_variation == 'w_state':
+        for i in range(1, vertex_num):
+            initial_state_circuit.cx(0, i)
+            initial_state_circuit.x(i)
+            initial_state_circuit.ry(np.arcsin(1 / ((vertex_num + 1 - i) ** (1/2))), 0)
+            initial_state_circuit.cx(i, 0)
+            initial_state_circuit.ry(-np.arcsin(1 / ((vertex_num + 1 - i) ** (1/2))), 0)
+            initial_state_circuit.x(i)
+            initial_state_circuit.cx(0, i)
+
+            initial_state_circuit.x(0) # This is not covered in the paper
+            initial_state_circuit.x(i) # This is not covered in the paper
+            if i > 1:
+                initial_state_circuit.swap(0, i) # This is not covered in the paper
+
+        initial_state_circuit.x(0) # flip back the first qubit
+    
     # print(initial_state_circuit)
     
 
@@ -96,7 +119,7 @@ def qaoaplus_one_run(p, G, initial_state_string='', print_out_res=False):
     optimum, counts = varopt.get_optimal_solution(return_counts=True)
     # print(counts)
     print(f"Found optimal solution: {optimum}")
-    return counts
+    return counts, res
 
 
 """
@@ -112,7 +135,7 @@ Returns
 -------
 energy_feasible: the average energy after pruning
 """
-def qaoaplus_compute_energy_avg_with_pruning(p, G, initial_state_string=''):
+def qaoaplus_compute_energy_avg_with_pruning(p, G, initial_state_string='', initial_state_variation='all_zero'):
     def mis_obj(x, G):
         obj = -sum(x)
         return obj
@@ -128,7 +151,7 @@ def qaoaplus_compute_energy_avg_with_pruning(p, G, initial_state_string=''):
     energy_feasible = 0
     feasible_count = 0
     total_count = 0
-    counts = qaoaplus_one_run(p, G, initial_state_string)
+    counts, res = qaoaplus_one_run(p, G, initial_state_string, initial_state_variation=initial_state_variation)
     for k,v in counts.items():
         k_string_array = np.array([int(i) for i in k])
         # invert the string order
