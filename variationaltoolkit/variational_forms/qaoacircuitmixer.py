@@ -28,7 +28,7 @@ from qiskit.circuit import Parameter
 from qiskit.aqua.operators import (OperatorBase, X, I, H, Zero, CircuitStateFn, EvolutionFactory, LegacyBaseOperator)
 from qiskit.aqua.operators import WeightedPauliOperator, op_converter
 from qiskit.aqua.components.variational_forms import VariationalForm
-from qiskit.aqua.component.initial_states import InitialState
+from qiskit.aqua.components.initial_states import InitialState
 # pylint: disable=invalid-name
 
 
@@ -113,7 +113,7 @@ class QAOACircuitMixer(VariationalForm):
             circuit = (self._cost_operator * beta).exp_i().compose(circuit)
             circuit = (self._mixer_circuit * gamma).exp_i().compose(circuit)
 
-        evolution = EvolutionFactor.build(self._cost_operator)
+        evolution = EvolutionFactory.build(self._cost_operator)
         circuit = evolution.convert(circuit)
         if self._measurement_circuit is not None:
             circuit += self._measurement_circuit

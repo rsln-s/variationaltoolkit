@@ -9,6 +9,8 @@ from variationaltoolkit.utils import mact, get_max_independent_set_operator
 from qiskit.aqua.components.variational_forms import RYRZ
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.circuit import Parameter
+from qiskit.aqua.components.initial_states import Custom
+from qiskit.aqua.components.initial_states import InitialState
 from qiskit.optimization.applications.ising.max_cut import get_operator as get_maxcut_operator
 
 # a recipe for conditional import from https://docs.python.org/3/library/importlib.html#checking-if-a-module-can-be-imported
@@ -54,6 +56,7 @@ class TestVarForm(unittest.TestCase):
         # build initial state circuit
         initial_state_circuit = QuantumCircuit(4)
         initial_state_circuit.u2(0, np.pi, range(4))
+        initial_state_circuit = Custom(num_qubits=4, circuit=initial_state_circuit)
 
         var_form_operator_mix = VarForm(varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4})
         var_form_circuit_mix = VarForm(varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4, 'use_mixer_circuit':True, 'initial_state_circuit':initial_state_circuit})
@@ -78,7 +81,8 @@ class TestVarForm(unittest.TestCase):
         # build initial state circuit
         initial_state_circuit = QuantumCircuit(4)
         initial_state_circuit.u2(0, np.pi, range(4))
-
+        initial_state_circuit = Custom(num_qubits=4, circuit=initial_state_circuit)
+        
         # build transverse field mixer circuit
         mixer_circuit = QuantumCircuit(4)
         beta = Parameter('beta')
