@@ -68,7 +68,14 @@ class BOBYQA(Optimizer):
     @staticmethod
     def check_pluggable_valid():
         check_nlopt_valid(BOBYQA.CONFIGURATION['name'])
-
+        
+    def get_support_level(self):
+        return {
+            'gradient': Optimizer.SupportLevel.ignored,
+            'bounds': Optimizer.SupportLevel.ignored,
+            'initial_point': Optimizer.SupportLevel.required
+        }
+        
     def optimize(self, num_vars, objective_function, gradient_function=None,
                  variable_bounds=None, initial_point=None):
         super().optimize(num_vars, objective_function,

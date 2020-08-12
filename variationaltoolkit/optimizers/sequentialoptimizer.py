@@ -72,6 +72,12 @@ class SequentialOptimizer(Optimizer):
         self.atol = atol
 
 
+    def get_support_level(self):
+        return {
+            'gradient': Optimizer.SupportLevel.ignored,
+            'bounds': Optimizer.SupportLevel.ignored,
+            'initial_point': Optimizer.SupportLevel.required
+        }
     # Main Optimization Function
     # Performs Compass Search / Coordinate Search Method
     def optimize(self, num_parameters, objective, gradient_function=None,
