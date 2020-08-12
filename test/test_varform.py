@@ -56,7 +56,6 @@ class TestVarForm(unittest.TestCase):
         # build initial state circuit
         initial_state_circuit = QuantumCircuit(4)
         initial_state_circuit.u2(0, np.pi, range(4))
-        initial_state_circuit = Custom(num_qubits=4, circuit=initial_state_circuit)
 
         var_form_operator_mix = VarForm(varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4})
         var_form_circuit_mix = VarForm(varform_description={'name':'QAOA', 'p':2, 'cost_operator':C, 'num_qubits':4, 'use_mixer_circuit':True, 'initial_state_circuit':initial_state_circuit})
@@ -81,7 +80,6 @@ class TestVarForm(unittest.TestCase):
         # build initial state circuit
         initial_state_circuit = QuantumCircuit(4)
         initial_state_circuit.u2(0, np.pi, range(4))
-        initial_state_circuit = Custom(num_qubits=4, circuit=initial_state_circuit)
         
         # build transverse field mixer circuit
         mixer_circuit = QuantumCircuit(4)
@@ -125,10 +123,8 @@ class TestVarForm(unittest.TestCase):
         for u in G.nodes():
             mixer_circuit.barrier()
             mact(mixer_circuit, list(qu[x] for x in G.neighbors(u)), ancilla_for_rx, ancilla_for_multi_toffoli)
-
             mixer_circuit.mcrx(2 * beta, ancilla_for_rx, qu[u])
             mixer_circuit.barrier()
-
             mact(mixer_circuit, list(qu[x] for x in G.neighbors(u)), ancilla_for_rx, ancilla_for_multi_toffoli)
         
         # Measurement circuit 

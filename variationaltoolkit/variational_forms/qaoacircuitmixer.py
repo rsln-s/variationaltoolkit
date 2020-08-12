@@ -28,7 +28,7 @@ from qiskit.circuit import Parameter
 from qiskit.aqua.operators import (OperatorBase, X, I, H, Zero, CircuitStateFn, EvolutionFactory, LegacyBaseOperator)
 from qiskit.aqua.operators import WeightedPauliOperator, op_converter
 from qiskit.aqua.components.variational_forms import VariationalForm
-from qiskit.aqua.components.initial_states import InitialState
+
 # pylint: disable=invalid-name
 
 
@@ -38,7 +38,6 @@ class QAOACircuitMixer(VariationalForm):
     def __init__(self, cost_operator, p, initial_state_circuit=None, mixer_circuit=None, measurement_circuit=None, qregs=None):
         """
         Constructor, following the QAOA paper https://arxiv.org/abs/1411.4028
-
         Args:
             cost_operator (WeightedPauliOperator): The operator representing the cost of
                                                    the optimization problem,
@@ -70,21 +69,23 @@ class QAOACircuitMixer(VariationalForm):
         self._preferred_init_points = [0] * p * 2
 
         # prepare the mixer operator
-        if isinstance(self._initial_state_circuit, LegacyBaseOperator):
-            self._initial_state_circuit = self._initial_state_circuit.to_opflow()
+        v = np.zeros(self._cost_operator.num_qubits)
+        ws = np.eye(self._cost_operator.num_qubits)
         if mixer_circuit is None:
-            num_qubits = self._num_qubits
-            mixer_terms = [(I ^ left) ^ X ^ (I ^ (num_qubits - left - 1)) for left in range(num_qubits)]
-            self._mixer_circuit = sum(mixer_terms)
-        elif isinstance(mixer_circuit, LegacyBaseOperator):
-            self._mixer_circuit = mixer_circuit.to_opflow()
+            # default mixer is transverse field
+            self._mixer_circuit = QuantumCircuit(self._num_qubits)
+            beta = Parameter('beta')
+            for q1 in range(self._num_qubits):
+                self._mixer_circuit.h(q1)
+                self._mixer_circuit.rz(2*beta, q1)
+                self._mixer_circuit.h(q1)
         else:
             if not isinstance(mixer_circuit, QuantumCircuit):
                 raise TypeError('The mixer should be a qiskit.QuantumCircuit '
                                 + 'object, found {} instead'.format(type(mixer_circuit)))
             self._mixer_circuit = mixer_circuit
-       # if len(self._mixer_circuit.parameters) != 1:
-        #    raise ValueError(f"Mixer circuit should have exactly one parameter (beta), received {self._mixer_circuit.parameters}")
+        if len(self._mixer_circuit.parameters) != 1:
+            raise ValueError(f"Mixer circuit should have exactly one parameter (beta), received {self._mixer_circuit.parameters}")
         self.support_parameterized_circuit = True
         self._measurement_circuit = measurement_circuit
         self.qregs = qregs
@@ -100,24 +101,21 @@ class QAOACircuitMixer(VariationalForm):
         # initialize circuit, possibly based on given register/initial state
         if self.qregs is None:
             self.qregs = [QuantumRegister(self._num_qubits, name='q')]
-            
-        circuit = (H ^ self._num_qubits)
-
+        circuit = QuantumCircuit(*self.qregs)
         if self._initial_state_circuit is not None:
-            init_state = CircuitStateFn(self._initial_state_circuit.construct_circuit('circuit'))
-        else:
-            init_state = Zero
-        
+            circuit += self._initial_state_circuit
+
         for idx in range(self._p):
             beta, gamma = angles[idx], angles[idx + self._p]
-            circuit = (self._cost_operator * beta).exp_i().compose(circuit)
-            circuit = (self._mixer_circuit * gamma).exp_i().compose(circuit)
-
-        evolution = EvolutionFactory.build(self._cost_operator)
-        circuit = evolution.convert(circuit)
+            circuit += self._cost_operator.to_legacy_op().evolve(
+                evo_time=gamma, num_time_slices=1, quantum_registers=self.qregs[0]
+            )
+            print(type(self._mixer_circuit.parameters))
+            beta_parameter = next(iter(self._mixer_circuit.parameters)) # checked in constructor that there's only one parameter
+            circuit += self._mixer_circuit.bind_parameters({beta_parameter: beta})
         if self._measurement_circuit is not None:
             circuit += self._measurement_circuit
-        return circuit.to_circuit()
+        return circuit
 
     @property
     def setting(self):
