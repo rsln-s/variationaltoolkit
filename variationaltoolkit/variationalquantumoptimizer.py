@@ -8,6 +8,7 @@ import qiskit.aqua.components.optimizers as qiskit_optimizers
 from .objectivewrapper import ObjectiveWrapper
 from .objectivewrappersmooth import ObjectiveWrapperSmooth
 from .utils import state_to_ampl_counts, check_cost_operator, get_adjusted_state, contains_and_raised
+from collections import Counter
 
 logger = logging.getLogger(__name__)
 
