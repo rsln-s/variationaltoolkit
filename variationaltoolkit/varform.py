@@ -13,6 +13,7 @@ elif _spec is not None:
     sys.modules['mpsbackend'] = _module
     _spec.loader.exec_module(_module)
     from mpsbackend import MPSSimulator
+    from mpsbackend import NoisyMPSSimulator
     print("Using mpsbackend")
 else:
     print(f"Can't find the mpsbackend module, continuing without it")
@@ -82,7 +83,10 @@ class VarForm:
                 provider = qiskit.IBMQ.get_provider(backend_description['provider'])
             backend = provider.get_backend(backend_description['name'])
         elif backend_description['package'] == 'mpsbackend':
-            backend = MPSSimulator()
+            if backend_description['name'] == 'noisy':
+                backend = NoisyMPSSimulator()
+            else:
+                backend = MPSSimulator()
 
         circuit = self.var_form.construct_circuit(parameters)
 

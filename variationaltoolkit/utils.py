@@ -242,3 +242,48 @@ def get_max_independent_set_operator(num_nodes):
         pauli_list.append([0.5, Pauli(z_p, x_p)])
     shift = -num_nodes/2
     return WeightedPauliOperator(paulis=pauli_list), shift
+
+
+def get_modularity_4_operator(B, m):
+    """Generate Hamiltonian for the modularity maximization with 4 communities.
+
+    Args:
+        B (numpy.ndarray) : modularity matrix.
+        m (int)           : number of edges.
+    Returns:
+        WeightedPauliOperator: operator for the Hamiltonian
+        float: a constant shift for the obj function.
+
+    """
+    num_nodes = B.shape[0]
+    pauli_list = []
+    shift = 0
+    
+    for i in range(num_nodes):
+        for j in range(num_nodes):
+            if i != j:
+                x_p = np.zeros(num_nodes*2, dtype=np.bool)
+                z_p = np.zeros(num_nodes*2, dtype=np.bool)
+                z_p[2*i] = True
+                z_p[2*j] = True
+                pauli_list.append([-B[i, j] / (8 * m), Pauli(z_p, x_p)])
+
+                x_p = np.zeros(num_nodes*2, dtype=np.bool)
+                z_p = np.zeros(num_nodes*2, dtype=np.bool)
+                z_p[2*i+1] = True
+                z_p[2*j+1] = True
+                pauli_list.append([-B[i, j] / (8 * m), Pauli(z_p, x_p)])
+
+                x_p = np.zeros(num_nodes*2, dtype=np.bool)
+                z_p = np.zeros(num_nodes*2, dtype=np.bool)
+                z_p[2*i] = True
+                z_p[2*j] = True
+                z_p[2*i+1] = True
+                z_p[2*j+1] = True
+                pauli_list.append([-B[i, j] / (8 * m), Pauli(z_p, x_p)])
+
+                shift -= B[i, j] / (8 * m)
+            else:
+                shift -= B[i, j] / (2 * m)
+            
+    return WeightedPauliOperator(paulis=pauli_list), shift
