@@ -5,8 +5,8 @@ import time
 from functools import partial
 from qiskit import QuantumCircuit, Aer, execute
 from qiskit.optimization.ising.max_cut import get_operator as get_maxcut_operator
-from variationaltoolkit.utils import obj_from_statevector, precompute_obj, cost_operator_to_vec, solution_density, get_max_independent_set_operator, check_cost_operator
-from variationaltoolkit.objectives import maxcut_obj
+from variationaltoolkit.utils import obj_from_statevector, precompute_obj, cost_operator_to_vec, solution_density, get_max_independent_set_operator, check_cost_operator, get_modularity_4_operator
+from variationaltoolkit.objectives import maxcut_obj, modularity_obj
 from variationaltoolkit.endianness import state_num2str
 
 
@@ -71,6 +71,19 @@ class TestUtils(unittest.TestCase):
             return -sum(x)
         C, offset = get_max_independent_set_operator(n)
         check_cost_operator(C, obj, offset=offset)
+        
+    def test_get_modularity_4_operator(self):
+        G = nx.fast_gnp_random_graph(6, 0.4, seed = 0, directed=False)
+        elist = [e for e in G.edges]
+        G = nx.OrderedGraph()
+        G.add_edges_from(elist)
+        node_list = list(range(G.number_of_nodes()))
+        B = nx.modularity_matrix(G, nodelist = node_list)
+        m = G.number_of_edges()
+        C, offset = get_modularity_4_operator(B, m)
+        obj_f = partial(modularity_obj, N=2, B = B,m = m)
+        check_cost_operator(C, obj_f, offset = offset)
+
 
 
 if __name__ == '__main__':
