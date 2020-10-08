@@ -26,7 +26,6 @@ counts: the dictionary that shows the final quantum state outputs
 """
 
 def stuart_one_run(p, G, initial_state_string='', initial_state_variation='all_zero', print_out_res=False, return_optimum=False, optimizer='COBYLA'):
-    fdgj
     vertex_num = G.number_of_nodes()
     
     def obj(x):
@@ -81,7 +80,7 @@ def stuart_one_run(p, G, initial_state_string='', initial_state_variation='all_z
         actual_i = len(initial_state_string) - 1 - i
         if current_state == '1':
             initial_state_circuit.x(actual_i)
-    print(initial_state_string)
+    # print(initial_state_string)
             
     if initial_state_variation == 'w_state':
         for i in range(1, vertex_num):
@@ -100,7 +99,7 @@ def stuart_one_run(p, G, initial_state_string='', initial_state_variation='all_z
 
         initial_state_circuit.x(0) # flip back the first qubit
     
-    print(initial_state_circuit)
+    # print(initial_state_circuit)
 
 
     # pass it all to VariationalQuantumOptimizer
