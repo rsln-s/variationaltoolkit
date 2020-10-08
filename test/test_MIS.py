@@ -59,12 +59,10 @@ class TestMIS(unittest.TestCase):
         G = nx.OrderedGraph()
         G.add_edges_from(elist)
         
-        counts_1, res_1 = stuart_one_run(1, G, '00000')
-        counts_2, res_2 = stuart_one_run(1, G, '11100')
+        counts_1, res_1 = stuart_one_run(1, G, initial_state_string='00000')
+        counts_2, res_2 = stuart_one_run(1, G, initial_state_string='11100')
         self.assertTrue((counts_1['00011'] / sum(counts_1.values())) > 0.85)
-        self.assertTrue((counts_2['11100'] / sum(counts_2.values())) > 0.85)
-        print('warning, the actual value is: ')
-        print(counts_2['11100'] / sum(counts_2.values()))
+        self.assertTrue((counts_2['11100'] / sum(counts_2.values())) > 0.90)
     
     
     """
@@ -76,7 +74,7 @@ class TestMIS(unittest.TestCase):
         G = nx.OrderedGraph()
         G.add_edges_from(elist)
         try:
-            stuart_compute_energy_avg(1, G, '00111') # the input state is not a valid independent set
+            stuart_compute_energy_avg(1, G, initial_state_string='00111') # the input state is not a valid independent set
         except ValueError as e:
             pass
         else:
