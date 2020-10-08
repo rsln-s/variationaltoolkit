@@ -21,7 +21,6 @@ import qiskit
 import qiskit.aqua.components.variational_forms as qiskit_variational_forms
 from qiskit.aqua.algorithms.adaptive.qaoa.var_form import QAOAVarForm
 from variationaltoolkit.variational_forms import QAOACircuitMixer
-from variationaltoolkit.variational_forms import QAOACircuitMixerQAOAPlus
 from .utils import execute_wrapper, check_and_load_accounts, contains_and_raised
 
 class VarForm:
