@@ -251,12 +251,13 @@ class TestVariationalQuantumOptimizerSequential(unittest.TestCase):
                 self.obj, 
                 'COBYLA', 
                 initial_point=[np.pi/4, 0, 0, np.pi/2],
-                optimizer_parameters=self.optimizer_parameters, 
+                optimizer_parameters={'maxiter':100}, 
                 varform_description={'name':'QAOA', 'p':15, 'cost_operator':C, 'num_qubits':4}, 
                 backend_description={'package':'qiskit', 'provider':'Aer', 'name':'statevector_simulator'}, 
                 problem_description={'offset': offset, 'smooth_schedule':True},
                 execute_parameters=self.execute_parameters)
         res = varopt.optimize()
+        print(res)
         self.assertTrue(res['min_val'] < -3.5)
         logging.disable(logging.NOTSET)
         
