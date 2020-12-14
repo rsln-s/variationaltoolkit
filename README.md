@@ -14,8 +14,7 @@ The flowchart can be edited within draw.io. The source can be found at https://d
 ```
 conda create --name quantum python=3.6
 conda activate quantum
-conda install numpy scipy cython ipython
-pip install qiskit==0.15.0
+conda install cython ipython
 git clone git@github.com:rsln-s/variationaltoolkit.git
 cd variationaltoolkit
 pip install -e .
