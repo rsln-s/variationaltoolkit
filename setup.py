@@ -5,5 +5,5 @@ setup(name='variationaltoolkit',
       author='Ruslan Shaydulin',
       author_email='rshaydu@g.clemson.edu',
       packages=['variationaltoolkit'],
-      install_requires=['qiskit==0.15'],
+      install_requires=['qiskit==1.4.2'],
       zip_safe=False)
